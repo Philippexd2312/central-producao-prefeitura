@@ -7,6 +7,7 @@ import './reports.css';
 import './mobile.css';
 import './ios.css';
 import AppChrome from '@/components/AppChrome';
+import IOSStandaloneDetector from '@/components/IOSStandaloneDetector';
 import { getCurrentUser, isManagerRole } from '@/lib/session';
 import { headers } from 'next/headers';
 import { redirect } from 'next/navigation';
@@ -62,6 +63,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   return (
     <html lang="pt-BR">
       <body>
+        <IOSStandaloneDetector />
         <AppChrome current={current} manager={current ? isManagerRole(current.role) : false}>
           {children}
         </AppChrome>
