@@ -36,8 +36,6 @@ export default function AppChrome({
     return <div className="publicRouteOnly">{children}</div>;
   }
 
-  const profileHref = manager ? '/' : '/meu-painel';
-
   return (
     <div className="appShell">
       <aside className="sidebar">
@@ -133,17 +131,23 @@ export default function AppChrome({
 
             {current ? (
               <div className="topbarUserActions">
-                <Link
-                  className="userChip"
-                  href={profileHref}
-                  title={manager ? 'Painel administrativo' : 'Abrir meu painel'}
-                >
-                  <div className="avatar">{current.name.charAt(0).toUpperCase()}</div>
-                  <div>
-                    <strong>{current.name}</strong>
-                    <span>{ROLE_LABELS[current.role] ?? current.role}</span>
+                {manager ? (
+                  <div className="userChip" title="Usuário administrador">
+                    <div className="avatar">{current.name.charAt(0).toUpperCase()}</div>
+                    <div>
+                      <strong>{current.name}</strong>
+                      <span>{ROLE_LABELS[current.role] ?? current.role}</span>
+                    </div>
                   </div>
-                </Link>
+                ) : (
+                  <Link className="userChip" href="/meu-painel" title="Abrir meu painel">
+                    <div className="avatar">{current.name.charAt(0).toUpperCase()}</div>
+                    <div>
+                      <strong>{current.name}</strong>
+                      <span>{ROLE_LABELS[current.role] ?? current.role}</span>
+                    </div>
+                  </Link>
+                )}
                 <Link className="logoutLink" href="/sair">Sair</Link>
               </div>
             ) : (
