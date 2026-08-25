@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import { useEffect, useState } from 'react';
 import { usePathname } from 'next/navigation';
 
 export type AppUser = {
@@ -20,6 +21,11 @@ const ROLE_LABELS: Record<string, string> = {
   REQUESTER: 'Solicitante',
 };
 
+function activeClass(pathname: string, href: string) {
+  const active = href === '/' ? pathname === '/' : pathname === href || pathname.startsWith(`${href}/`);
+  return active ? ' navItemActive' : '';
+}
+
 export default function AppChrome({
   children,
   current,
@@ -30,7 +36,19 @@ export default function AppChrome({
   manager: boolean;
 }) {
   const pathname = usePathname();
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const publicRoute = pathname === '/login' || pathname.startsWith('/login/');
+
+  useEffect(() => {
+    setMobileMenuOpen(false);
+  }, [pathname]);
+
+  useEffect(() => {
+    document.body.style.overflow = mobileMenuOpen ? 'hidden' : '';
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, [mobileMenuOpen]);
 
   if (publicRoute) {
     return <div className="publicRouteOnly">{children}</div>;
@@ -38,30 +56,47 @@ export default function AppChrome({
 
   return (
     <div className="appShell">
-      <aside className="sidebar">
+      {mobileMenuOpen && (
+        <button
+          type="button"
+          className="mobileSidebarBackdrop"
+          aria-label="Fechar menu"
+          onClick={() => setMobileMenuOpen(false)}
+        />
+      )}
+
+      <aside className={`sidebar${mobileMenuOpen ? ' mobileOpen' : ''}`}>
         <div className="brandBlock">
           <div className="brandMark">C</div>
           <div>
             <strong>COMUNICAÇÃO</strong>
             <span>Central de Produção</span>
           </div>
+          <button
+            type="button"
+            className="mobileCloseButton"
+            aria-label="Fechar menu"
+            onClick={() => setMobileMenuOpen(false)}
+          >
+            ×
+          </button>
         </div>
 
         <nav className="sideNav" aria-label="Navegação principal">
           <div className="navSectionLabel">TRABALHO</div>
-          <Link prefetch={false} className="navItem" href="/">
+          <Link prefetch={false} className={`navItem${activeClass(pathname, '/')}`} href="/">
             <span className="navIcon">▦</span>
             <span>Painel de produção</span>
           </Link>
 
           {current && !manager && (
-            <Link prefetch={false} className="navItem" href="/meu-painel">
+            <Link prefetch={false} className={`navItem${activeClass(pathname, '/meu-painel')}`} href="/meu-painel">
               <span className="navIcon">◎</span>
               <span>Meu painel</span>
             </Link>
           )}
 
-          <Link prefetch={false} className="navItem" href="/demandas/nova">
+          <Link prefetch={false} className={`navItem${activeClass(pathname, '/demandas/nova')}`} href="/demandas/nova">
             <span className="navIcon">＋</span>
             <span>Nova demanda</span>
           </Link>
@@ -72,7 +107,7 @@ export default function AppChrome({
             <small>em breve</small>
           </div>
 
-          <Link prefetch={false} className="navItem" href="/equipe">
+          <Link prefetch={false} className={`navItem${activeClass(pathname, '/equipe')}`} href="/equipe">
             <span className="navIcon">◉</span>
             <span>Equipe</span>
           </Link>
@@ -80,7 +115,7 @@ export default function AppChrome({
           <div className="navSectionLabel navSectionGap">GESTÃO</div>
 
           {manager && (
-            <Link prefetch={false} className="navItem" href="/equipe/novo">
+            <Link prefetch={false} className={`navItem${activeClass(pathname, '/equipe/novo')}`} href="/equipe/novo">
               <span className="navIcon">＋</span>
               <span>Cadastrar profissional</span>
             </Link>
@@ -92,7 +127,7 @@ export default function AppChrome({
           </div>
 
           {manager ? (
-            <Link prefetch={false} className="navItem" href="/relatorios">
+            <Link prefetch={false} className={`navItem${activeClass(pathname, '/relatorios')}`} href="/relatorios">
               <span className="navIcon">▤</span>
               <span>Relatórios</span>
             </Link>
@@ -115,9 +150,21 @@ export default function AppChrome({
 
       <div className="workspace">
         <header className="workspaceTopbar">
+          <button
+            type="button"
+            className="mobileMenuButton"
+            aria-label="Abrir menu"
+            aria-expanded={mobileMenuOpen}
+            onClick={() => setMobileMenuOpen(true)}
+          >
+            <span />
+            <span />
+            <span />
+          </button>
+
           <div className="mobileBrand">
-            <strong>COMUNICAÇÃO</strong>
-            <span>Central de Produção</span>
+            <strong>Central de Produção</strong>
+            <span>Comunicação</span>
           </div>
 
           <div className="topbarContext">
@@ -161,6 +208,42 @@ export default function AppChrome({
 
         <main className="mainContent">{children}</main>
       </div>
+
+      <nav className="mobileBottomNav" aria-label="Atalhos móveis">
+        <Link prefetch={false} href="/" className={pathname === '/' ? 'active' : ''}>
+          <span>▦</span>
+          <small>Painel</small>
+        </Link>
+
+        {!manager && current ? (
+          <Link prefetch={false} href="/meu-painel" className={pathname.startsWith('/meu-painel') ? 'active' : ''}>
+            <span>◎</span>
+            <small>Meu painel</small>
+          </Link>
+        ) : (
+          <Link prefetch={false} href="/equipe" className={pathname.startsWith('/equipe') && pathname !== '/equipe/novo' ? 'active' : ''}>
+            <span>◉</span>
+            <small>Equipe</small>
+          </Link>
+        )}
+
+        <Link prefetch={false} href="/demandas/nova" className={`mobileBottomPrimary ${pathname.startsWith('/demandas/nova') ? 'active' : ''}`}>
+          <span>＋</span>
+          <small>Nova</small>
+        </Link>
+
+        {manager ? (
+          <Link prefetch={false} href="/relatorios" className={pathname.startsWith('/relatorios') ? 'active' : ''}>
+            <span>▤</span>
+            <small>Relatórios</small>
+          </Link>
+        ) : (
+          <Link prefetch={false} href="/equipe" className={pathname.startsWith('/equipe') ? 'active' : ''}>
+            <span>◉</span>
+            <small>Equipe</small>
+          </Link>
+        )}
+      </nav>
     </div>
   );
 }
