@@ -30,7 +30,7 @@ export async function POST(_: Request, { params }: { params: Promise<{ id: strin
     );
   }
 
-  if ([DemandStatus.DELIVERED, DemandStatus.ARCHIVED].includes(current.status)) {
+  if (current.status === DemandStatus.DELIVERED || current.status === DemandStatus.ARCHIVED) {
     return NextResponse.json({ error: 'Esta demanda já foi encerrada.' }, { status: 409 });
   }
 
