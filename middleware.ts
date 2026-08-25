@@ -46,9 +46,12 @@ async function isValidToken(token: string, secret: string) {
 }
 
 export async function middleware(request: NextRequest) {
-  const enforced = process.env.AUTH_ENFORCE === 'true';
   const secret = process.env.AUTH_SECRET || process.env.SESSION_SECRET;
-  if (!enforced || !secret) return NextResponse.next();
+
+  // A partir do momento em que AUTH_SECRET existe, todas as páginas internas
+  // exigem login. Não dependemos mais de AUTH_ENFORCE para evitar acesso aberto
+  // por configuração incorreta no Railway.
+  if (!secret) return NextResponse.next();
 
   const pathname = request.nextUrl.pathname;
   if (PUBLIC_PATHS.some(path => pathname === path || pathname.startsWith(`${path}/`))) {
