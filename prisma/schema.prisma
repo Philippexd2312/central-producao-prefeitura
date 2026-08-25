@@ -1,0 +1,160 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum DemandStatus {
+  NEW
+  AI_TRIAGE
+  BRIEFING_READY
+  WAITING_ASSIGNEE
+  IN_PRODUCTION
+  INTERNAL_REVIEW
+  WAITING_APPROVAL
+  CHANGES_REQUESTED
+  APPROVED
+  DELIVERED
+  ARCHIVED
+}
+
+enum DemandPriority {
+  LOW
+  NORMAL
+  HIGH
+  URGENT
+}
+
+enum DemandType {
+  DESIGN
+  VIDEO
+  PHOTO
+  COPY
+  SOCIAL
+  OTHER
+}
+
+enum AssetKind {
+  IMAGE
+  VIDEO
+  AUDIO
+  DOCUMENT
+  LOGO
+  REFERENCE
+  PREVIEW
+  FINAL
+  OTHER
+}
+
+enum UserRole {
+  ADMIN
+  MANAGER
+  DESIGNER
+  EDITOR
+  COPYWRITER
+  SOCIAL_MEDIA
+  REQUESTER
+}
+
+model Department {
+  id        String   @id @default(cuid())
+  name      String   @unique
+  code      String   @unique
+  demands   Demand[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model User {
+  id              String          @id @default(cuid())
+  name            String
+  email           String          @unique
+  role            UserRole
+  active          Boolean         @default(true)
+  assignedDemands Demand[]        @relation("DemandAssignee")
+  comments        DemandComment[]
+  histories       DemandHistory[]
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+}
+
+model Demand {
+  id              String          @id @default(cuid())
+  protocol        String          @unique
+  title           String
+  originalText    String?
+  briefing        String?
+  revisedText     String?
+  missingInfo     String?
+  type            DemandType      @default(DESIGN)
+  status          DemandStatus    @default(NEW)
+  priority        DemandPriority  @default(NORMAL)
+  dueAt           DateTime?
+  requesterName   String?
+  requesterPhone  String?
+  source           String          @default("WEB")
+  departmentId    String?
+  department      Department?      @relation(fields: [departmentId], references: [id])
+  assigneeId      String?
+  assignee        User?            @relation("DemandAssignee", fields: [assigneeId], references: [id])
+  assets          DemandAsset[]
+  comments        DemandComment[]
+  history         DemandHistory[]
+  messages        DemandMessage[]
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+
+  @@index([status])
+  @@index([departmentId])
+  @@index([assigneeId])
+  @@index([dueAt])
+}
+
+model DemandAsset {
+  id        String    @id @default(cuid())
+  demandId  String
+  demand    Demand    @relation(fields: [demandId], references: [id], onDelete: Cascade)
+  name      String
+  url       String
+  mimeType  String?
+  kind      AssetKind @default(OTHER)
+  createdAt DateTime  @default(now())
+}
+
+model DemandComment {
+  id        String   @id @default(cuid())
+  demandId  String
+  demand    Demand   @relation(fields: [demandId], references: [id], onDelete: Cascade)
+  authorId  String?
+  author    User?    @relation(fields: [authorId], references: [id])
+  text      String
+  createdAt DateTime @default(now())
+}
+
+model DemandHistory {
+  id        String   @id @default(cuid())
+  demandId  String
+  demand    Demand   @relation(fields: [demandId], references: [id], onDelete: Cascade)
+  actorId   String?
+  actor     User?    @relation(fields: [actorId], references: [id])
+  action    String
+  fromValue String?
+  toValue   String?
+  createdAt DateTime @default(now())
+}
+
+model DemandMessage {
+  id          String   @id @default(cuid())
+  demandId    String?
+  demand      Demand?  @relation(fields: [demandId], references: [id], onDelete: SetNull)
+  externalId  String?  @unique
+  fromPhone   String?
+  type        String
+  text        String?
+  mediaId     String?
+  rawJson     Json?
+  createdAt   DateTime @default(now())
+}
