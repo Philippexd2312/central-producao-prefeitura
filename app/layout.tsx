@@ -7,6 +7,7 @@ import './reports.css';
 import './mobile.css';
 import './ios.css';
 import './premium-workspace.css';
+import './mobile-performance.css';
 import AppChrome from '@/components/AppChrome';
 import IOSStandaloneDetector from '@/components/IOSStandaloneDetector';
 import { getCurrentUser, isManagerRole } from '@/lib/session';
