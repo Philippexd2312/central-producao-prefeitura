@@ -1,0 +1,90 @@
+.cardMainLink {
+  display: block;
+  color: inherit;
+}
+
+.cardActions {
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px solid #edf2ef;
+}
+
+.claimButton {
+  width: 100%;
+  min-height: 42px;
+  border: 0;
+  border-radius: 12px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 10px 14px;
+  background: linear-gradient(135deg, #20a762, #168653);
+  color: #fff;
+  font-weight: 900;
+  font-size: 12px;
+  box-shadow: 0 8px 18px rgba(22, 134, 83, .18);
+  transition: transform .15s ease, box-shadow .15s ease, opacity .15s ease;
+}
+
+.claimButton:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 11px 24px rgba(22, 134, 83, .24);
+}
+
+.claimButton:disabled {
+  opacity: .65;
+  cursor: wait;
+}
+
+.claimButton > span {
+  width: 20px;
+  height: 20px;
+  display: grid;
+  place-items: center;
+  border-radius: 999px;
+  background: rgba(255,255,255,.16);
+  font-size: 11px;
+}
+
+.claimButtonCompact {
+  min-height: 34px;
+  padding: 8px 10px;
+  border-radius: 10px;
+  font-size: 10px;
+  box-shadow: none;
+}
+
+.claimButtonCompact > span {
+  width: 17px;
+  height: 17px;
+  font-size: 9px;
+}
+
+.detailActions {
+  min-width: 190px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 9px;
+}
+
+.detailActions .claimButton {
+  width: auto;
+  min-width: 180px;
+}
+
+@media (max-width: 700px) {
+  .detailHeader {
+    flex-direction: column;
+  }
+
+  .detailActions {
+    width: 100%;
+    align-items: stretch;
+  }
+
+  .detailActions .claimButton {
+    width: 100%;
+  }
+}
