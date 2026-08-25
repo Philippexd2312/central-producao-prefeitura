@@ -1,0 +1,65 @@
+import { NextRequest, NextResponse } from 'next/server';
+
+const COOKIE_NAME = 'central_session';
+const PUBLIC_PATHS = ['/login', '/api/auth/login', '/api/webhooks/whatsapp'];
+
+function decodeBase64Url(value: string) {
+  const normalized = value.replace(/-/g, '+').replace(/_/g, '/');
+  const padding = '='.repeat((4 - normalized.length % 4) % 4);
+  const binary = atob(normalized + padding);
+  return Uint8Array.from(binary, char => char.charCodeAt(0));
+}
+
+async function isValidToken(token: string, secret: string) {
+  const [body, signature] = token.split('.');
+  if (!body || !signature) return false;
+
+  try {
+    const encoder = new TextEncoder();
+    const key = await crypto.subtle.importKey(
+      'raw',
+      encoder.encode(secret),
+      { name: 'HMAC', hash: 'SHA-256' },
+      false,
+      ['verify'],
+    );
+    const valid = await crypto.subtle.verify(
+      'HMAC',
+      key,
+      decodeBase64Url(signature),
+      encoder.encode(body),
+    );
+    if (!valid) return false;
+
+    const payload = JSON.parse(new TextDecoder().decode(decodeBase64Url(body)));
+    return Boolean(payload?.userId && payload?.exp && payload.exp > Date.now());
+  } catch {
+    return false;
+  }
+}
+
+export async function middleware(request: NextRequest) {
+  const enforced = process.env.AUTH_ENFORCE === 'true';
+  const secret = process.env.AUTH_SECRET || process.env.SESSION_SECRET;
+  if (!enforced || !secret) return NextResponse.next();
+
+  const pathname = request.nextUrl.pathname;
+  if (PUBLIC_PATHS.some(path => pathname === path || pathname.startsWith(`${path}/`))) {
+    return NextResponse.next();
+  }
+
+  const token = request.cookies.get(COOKIE_NAME)?.value;
+  if (token && await isValidToken(token, secret)) return NextResponse.next();
+
+  if (pathname.startsWith('/api/')) {
+    return NextResponse.json({ error: 'Não autenticado.' }, { status: 401 });
+  }
+
+  const loginUrl = new URL('/login', request.url);
+  loginUrl.searchParams.set('next', pathname);
+  return NextResponse.redirect(loginUrl);
+}
+
+export const config = {
+  matcher: ['/((?!_next/static|_next/image|favicon.ico).*)'],
+};
