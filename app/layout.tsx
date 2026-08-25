@@ -6,6 +6,7 @@ import './auth.css';
 import './reports.css';
 import './mobile.css';
 import './ios.css';
+import './premium-workspace.css';
 import AppChrome from '@/components/AppChrome';
 import IOSStandaloneDetector from '@/components/IOSStandaloneDetector';
 import { getCurrentUser, isManagerRole } from '@/lib/session';
