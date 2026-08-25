@@ -49,19 +49,19 @@ export default function AppChrome({
 
         <nav className="sideNav" aria-label="Navegação principal">
           <div className="navSectionLabel">TRABALHO</div>
-          <Link className="navItem" href="/">
+          <Link prefetch={false} className="navItem" href="/">
             <span className="navIcon">▦</span>
             <span>Painel de produção</span>
           </Link>
 
           {current && !manager && (
-            <Link className="navItem" href="/meu-painel">
+            <Link prefetch={false} className="navItem" href="/meu-painel">
               <span className="navIcon">◎</span>
               <span>Meu painel</span>
             </Link>
           )}
 
-          <Link className="navItem" href="/demandas/nova">
+          <Link prefetch={false} className="navItem" href="/demandas/nova">
             <span className="navIcon">＋</span>
             <span>Nova demanda</span>
           </Link>
@@ -72,7 +72,7 @@ export default function AppChrome({
             <small>em breve</small>
           </div>
 
-          <Link className="navItem" href="/equipe">
+          <Link prefetch={false} className="navItem" href="/equipe">
             <span className="navIcon">◉</span>
             <span>Equipe</span>
           </Link>
@@ -80,7 +80,7 @@ export default function AppChrome({
           <div className="navSectionLabel navSectionGap">GESTÃO</div>
 
           {manager && (
-            <Link className="navItem" href="/equipe/novo">
+            <Link prefetch={false} className="navItem" href="/equipe/novo">
               <span className="navIcon">＋</span>
               <span>Cadastrar profissional</span>
             </Link>
@@ -92,7 +92,7 @@ export default function AppChrome({
           </div>
 
           {manager ? (
-            <Link className="navItem" href="/relatorios">
+            <Link prefetch={false} className="navItem" href="/relatorios">
               <span className="navIcon">▤</span>
               <span>Relatórios</span>
             </Link>
@@ -127,7 +127,7 @@ export default function AppChrome({
 
           <div className="topbarActions">
             <div className="notificationBtn" title="Notificações">●</div>
-            <Link className="primaryLink" href="/demandas/nova">＋ Nova demanda</Link>
+            <Link prefetch={false} className="primaryLink" href="/demandas/nova">＋ Nova demanda</Link>
 
             {current ? (
               <div className="topbarUserActions">
@@ -140,7 +140,7 @@ export default function AppChrome({
                     </div>
                   </div>
                 ) : (
-                  <Link className="userChip" href="/meu-painel" title="Abrir meu painel">
+                  <Link prefetch={false} className="userChip" href="/meu-painel" title="Abrir meu painel">
                     <div className="avatar">{current.name.charAt(0).toUpperCase()}</div>
                     <div>
                       <strong>{current.name}</strong>
@@ -148,10 +148,10 @@ export default function AppChrome({
                     </div>
                   </Link>
                 )}
-                <Link className="logoutLink" href="/sair">Sair</Link>
+                <Link prefetch={false} className="logoutLink" href="/sair">Sair</Link>
               </div>
             ) : (
-              <Link className="userChip" href="/login" title="Entrar no sistema">
+              <Link prefetch={false} className="userChip" href="/login" title="Entrar no sistema">
                 <div className="avatar">↪</div>
                 <div><strong>Entrar</strong><span>Acesso da equipe</span></div>
               </Link>
