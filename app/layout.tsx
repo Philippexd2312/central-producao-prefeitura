@@ -1,6 +1,7 @@
 import './globals.css';
 import './claim.css';
 import './demand-workspace.css';
+import './team.css';
 import Link from 'next/link';
 
 export const metadata = {
@@ -24,7 +25,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
 
             <nav className="sideNav" aria-label="Navegação principal">
               <div className="navSectionLabel">TRABALHO</div>
-              <Link className="navItem navItemActive" href="/">
+              <Link className="navItem" href="/">
                 <span className="navIcon">▦</span>
                 <span>Painel de produção</span>
               </Link>
@@ -37,11 +38,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                 <span>Aprovações</span>
                 <small>em breve</small>
               </div>
-              <div className="navItem navItemMuted">
+              <Link className="navItem" href="/equipe">
                 <span className="navIcon">◉</span>
                 <span>Equipe</span>
-                <small>em breve</small>
-              </div>
+              </Link>
 
               <div className="navSectionLabel navSectionGap">GESTÃO</div>
               <div className="navItem navItemMuted">
@@ -76,10 +76,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               <div className="topbarActions">
                 <div className="notificationBtn" title="Notificações">●</div>
                 <Link className="primaryLink" href="/demandas/nova">＋ Nova demanda</Link>
-                <div className="userChip">
+                <Link className="userChip" href="/equipe" title="Abrir equipe">
                   <div className="avatar">P</div>
                   <div><strong>Equipe</strong><span>Comunicação</span></div>
-                </div>
+                </Link>
               </div>
             </header>
             <main className="mainContent">{children}</main>
