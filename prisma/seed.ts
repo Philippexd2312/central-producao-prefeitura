@@ -1,4 +1,5 @@
 import { PrismaClient, DemandPriority, DemandStatus, DemandType, UserRole } from '@prisma/client';
+import { hashPassword } from '../lib/password';
 
 const prisma = new PrismaClient();
 
@@ -13,6 +14,34 @@ async function main() {
     update: {},
     create: { name: 'Designer 01', email: 'designer@prefeitura.local', role: UserRole.DESIGNER },
   });
+
+  const initialPassword = process.env.INITIAL_ADMIN_PASSWORD;
+  if (initialPassword) {
+    const adminEmail = (process.env.INITIAL_ADMIN_EMAIL || 'admin@prefeitura.local').trim().toLowerCase();
+    const adminName = (process.env.INITIAL_ADMIN_NAME || 'Administrador').trim();
+    const existingAdmin = await prisma.user.findUnique({ where: { email: adminEmail } });
+
+    if (!existingAdmin) {
+      await prisma.user.create({
+        data: {
+          name: adminName,
+          email: adminEmail,
+          role: UserRole.ADMIN,
+          passwordHash: hashPassword(initialPassword),
+          active: true,
+        },
+      });
+    } else if (!existingAdmin.passwordHash) {
+      await prisma.user.update({
+        where: { id: existingAdmin.id },
+        data: {
+          role: UserRole.ADMIN,
+          passwordHash: hashPassword(initialPassword),
+          active: true,
+        },
+      });
+    }
+  }
 
   const demoCount = await prisma.demand.count();
   if (demoCount === 0) {
