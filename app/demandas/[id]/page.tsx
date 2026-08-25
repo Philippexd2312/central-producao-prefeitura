@@ -1,3 +1,4 @@
+import ClaimDemandButton from '@/components/ClaimDemandButton';
 import { db } from '@/lib/db';
 import { STATUS_LABELS } from '@/types/demand';
 import { notFound } from 'next/navigation';
@@ -19,6 +20,8 @@ export default async function DemandPage({ params }: { params: Promise<{ id: str
 
   if (!demand) notFound();
 
+  const canClaim = !demand.assigneeId && !['DELIVERED', 'ARCHIVED'].includes(demand.status);
+
   return (
     <div className="page detail">
       <div className="detailHeader">
@@ -26,7 +29,10 @@ export default async function DemandPage({ params }: { params: Promise<{ id: str
           <span className="protocol">{demand.protocol}</span>
           <h1>{demand.title}</h1>
         </div>
-        <span className={`badge priority-${demand.priority}`}>{demand.priority}</span>
+        <div className="detailActions">
+          <span className={`badge priority-${demand.priority}`}>{demand.priority}</span>
+          {canClaim && <ClaimDemandButton demandId={demand.id} />}
+        </div>
       </div>
 
       <div className="detailGrid">
