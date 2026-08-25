@@ -1,4 +1,4 @@
-/* Ajustes específicos para iPhone/iOS quando instalado pela Tela de Início */
+/* Ajustes específicos para iPhone/iOS */
 @supports (padding: max(0px)) {
   @media (max-width: 900px) {
     .workspaceTopbar {
@@ -24,48 +24,86 @@
     .loginForm input,
     .newMemberForm input,
     .newMemberForm select {
-      scroll-margin-top: calc(84px + env(safe-area-inset-top));
-      scroll-margin-bottom: 42vh;
+      scroll-margin-top: 120px;
+      scroll-margin-bottom: 46vh;
     }
 
     .formWrap .panel {
-      margin-bottom: calc(88px + env(safe-area-inset-bottom));
+      margin-bottom: calc(96px + env(safe-area-inset-bottom));
     }
   }
 }
 
-@media (display-mode: standalone) and (max-width: 900px) {
-  html,
-  body {
+/*
+  O iOS às vezes devolve safe-area-inset-top = 0 em PWAs já instalados.
+  A classe iosStandalone é aplicada via JavaScript e reserva o espaço real
+  da barra de status mesmo quando o Safari informa o valor errado.
+*/
+@media (max-width: 900px) {
+  html.iosStandalone,
+  body.iosStandalone {
+    --ios-hard-top: 50px;
     min-height: 100dvh;
     background: #f4f8f6;
   }
 
-  .workspaceTopbar {
-    top: 0;
-    min-height: calc(58px + env(safe-area-inset-top)) !important;
-    padding-top: calc(7px + env(safe-area-inset-top)) !important;
-    padding-bottom: 7px !important;
+  .iosStandalone .workspaceTopbar {
+    top: 0 !important;
+    height: auto !important;
+    min-height: 108px !important;
+    padding-top: var(--ios-hard-top) !important;
+    padding-bottom: 8px !important;
+    padding-left: max(10px, env(safe-area-inset-left)) !important;
+    padding-right: max(10px, env(safe-area-inset-right)) !important;
   }
 
-  .sidebar {
-    padding-top: calc(16px + env(safe-area-inset-top));
+  .iosStandalone .mainContent {
+    min-height: calc(var(--visual-viewport-height, 100dvh) - 108px);
   }
 
-  .loginPage {
-    padding-top: calc(18px + env(safe-area-inset-top));
-    padding-bottom: calc(18px + env(safe-area-inset-bottom));
+  .iosStandalone .page {
+    padding-top: 18px !important;
+    scroll-padding-top: 126px !important;
   }
 
-  .mobileBottomNav {
+  .iosStandalone .sidebar {
+    padding-top: 58px !important;
+  }
+
+  .iosStandalone .loginPage {
+    padding-top: 58px !important;
+    padding-bottom: max(20px, env(safe-area-inset-bottom)) !important;
+  }
+
+  .iosStandalone .mobileBottomNav {
     bottom: max(8px, env(safe-area-inset-bottom));
   }
 
-  .pageTitle h1,
-  .dashboardHero h1,
-  .teamHero h1,
-  .personDashboardHeader h1,
-  .reportHero h1 {
+  .iosStandalone .pageTitle {
+    margin-top: 0 !important;
+  }
+
+  .iosStandalone .pageTitle h1,
+  .iosStandalone .dashboardHero h1,
+  .iosStandalone .teamHero h1,
+  .iosStandalone .personDashboardHeader h1,
+  .iosStandalone .reportHero h1 {
     line-height: 1.12;
+  }
+
+  .iosStandalone .field input,
+  .iosStandalone .field select,
+  .iosStandalone .field textarea {
+    scroll-margin-top: 132px !important;
+    scroll-margin-bottom: 48vh !important;
+  }
+}
+
+/* fallback para iPhone mesmo fora do modo standalone */
+@supports (-webkit-touch-callout: none) {
+  @media (max-width: 900px) {
+    html.iosDevice .workspaceTopbar {
+      padding-top: max(12px, env(safe-area-inset-top)) !important;
+    }
   }
 }
