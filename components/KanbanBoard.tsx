@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { useMemo, useState } from 'react';
+import ClaimDemandButton from '@/components/ClaimDemandButton';
 import { KANBAN_STATUSES, STATUS_LABELS } from '@/types/demand';
 
 type DemandCard = {
@@ -84,6 +85,14 @@ export default function KanbanBoard({ initialDemands }: { initialDemands: Demand
     }
   }
 
+  function applyClaimedDemand(updated: any) {
+    setDemands(current => current.map(d => d.id === updated.id ? {
+      ...d,
+      status: updated.status,
+      assignee: updated.assignee ? { name: updated.assignee.name } : null,
+    } : d));
+  }
+
   return (
     <div>
       <div className="boardToolbar">
@@ -134,37 +143,48 @@ export default function KanbanBoard({ initialDemands }: { initialDemands: Demand
 
             <div className="cardList">
               {(grouped[status] ?? []).map(demand => (
-                <Link
-                  href={`/demandas/${demand.id}`}
+                <article
                   key={demand.id}
                   draggable
                   onDragStart={() => setDraggedId(demand.id)}
                   className="card"
                 >
                   <div className="cardAccent" />
-                  <div className="cardTop">
-                    <span className="protocol">{demand.protocol}</span>
-                    <span className={`badge priority-${demand.priority}`}>{PRIORITY_LABELS[demand.priority] ?? demand.priority}</span>
-                  </div>
-                  <h3>{demand.title}</h3>
-                  {demand.department && (
-                    <div className="departmentLine">
-                      <span className="departmentCode">{demand.department.code}</span>
-                      <span>{demand.department.name}</span>
+                  <Link href={`/demandas/${demand.id}`} className="cardMainLink">
+                    <div className="cardTop">
+                      <span className="protocol">{demand.protocol}</span>
+                      <span className={`badge priority-${demand.priority}`}>{PRIORITY_LABELS[demand.priority] ?? demand.priority}</span>
+                    </div>
+                    <h3>{demand.title}</h3>
+                    {demand.department && (
+                      <div className="departmentLine">
+                        <span className="departmentCode">{demand.department.code}</span>
+                        <span>{demand.department.name}</span>
+                      </div>
+                    )}
+                    <div className="meta">
+                      <span className="typeBadge"><b>{TYPE_ICONS[demand.type] ?? '•'}</b>{TYPE_LABELS[demand.type] ?? demand.type}</span>
+                      {demand.assignee ? (
+                        <span className="assigneeBadge"><span className="miniAvatar">{demand.assignee.name.charAt(0)}</span>{demand.assignee.name}</span>
+                      ) : (
+                        <span className="unassignedBadge">Sem responsável</span>
+                      )}
+                    </div>
+                    {demand.dueAt && (
+                      <div className="due">◷ Prazo: {new Date(demand.dueAt).toLocaleString('pt-BR')}</div>
+                    )}
+                  </Link>
+
+                  {!demand.assignee && !['DELIVERED', 'ARCHIVED'].includes(demand.status) && (
+                    <div className="cardActions">
+                      <ClaimDemandButton
+                        demandId={demand.id}
+                        compact
+                        onClaimed={applyClaimedDemand}
+                      />
                     </div>
                   )}
-                  <div className="meta">
-                    <span className="typeBadge"><b>{TYPE_ICONS[demand.type] ?? '•'}</b>{TYPE_LABELS[demand.type] ?? demand.type}</span>
-                    {demand.assignee ? (
-                      <span className="assigneeBadge"><span className="miniAvatar">{demand.assignee.name.charAt(0)}</span>{demand.assignee.name}</span>
-                    ) : (
-                      <span className="unassignedBadge">Sem responsável</span>
-                    )}
-                  </div>
-                  {demand.dueAt && (
-                    <div className="due">◷ Prazo: {new Date(demand.dueAt).toLocaleString('pt-BR')}</div>
-                  )}
-                </Link>
+                </article>
               ))}
               {!grouped[status]?.length && (
                 <div className="empty">
