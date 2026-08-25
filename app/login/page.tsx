@@ -5,7 +5,7 @@ export const dynamic = 'force-dynamic';
 
 export default async function LoginPage({ searchParams }: { searchParams: Promise<{ erro?: string }> }) {
   const current = await getCurrentUser();
-  if (current) redirect('/meu-painel');
+  if (current) redirect('/');
   const { erro } = await searchParams;
 
   const errorMessage = erro === 'credenciais'
