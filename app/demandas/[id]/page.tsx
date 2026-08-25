@@ -29,10 +29,7 @@ export default async function DemandPage({ params }: { params: Promise<{ id: str
           <span className="protocol">{demand.protocol}</span>
           <h1>{demand.title}</h1>
         </div>
-        <div className="detailActions">
-          <span className={`badge priority-${demand.priority}`}>{demand.priority}</span>
-          {canClaim && <ClaimDemandButton demandId={demand.id} />}
-        </div>
+        <span className={`badge priority-${demand.priority}`}>{demand.priority}</span>
       </div>
 
       <div className="detailGrid">
@@ -45,7 +42,7 @@ export default async function DemandPage({ params }: { params: Promise<{ id: str
           <div className="copyBox">{demand.originalText || 'Sem texto.'}</div>
         </div>
 
-        <aside className="panel">
+        <aside className="panel productionPanel">
           <h2 className="sectionTitle">Dados da produção</h2>
           <div className="infoList">
             <div className="infoRow"><span>Status</span><strong>{STATUS_LABELS[demand.status] || demand.status}</strong></div>
@@ -56,6 +53,16 @@ export default async function DemandPage({ params }: { params: Promise<{ id: str
             <div className="infoRow"><span>Origem</span><strong>{demand.source}</strong></div>
             <div className="infoRow"><span>Prazo</span><strong>{demand.dueAt ? demand.dueAt.toLocaleString('pt-BR') : '—'}</strong></div>
           </div>
+
+          {canClaim && (
+            <div className="claimPanel">
+              <div className="claimPanelText">
+                <strong>Demanda disponível</strong>
+                <span>Assuma esta tarefa para iniciar a produção.</span>
+              </div>
+              <ClaimDemandButton demandId={demand.id} />
+            </div>
+          )}
         </aside>
       </div>
     </div>
