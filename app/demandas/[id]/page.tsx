@@ -1,4 +1,4 @@
-import ClaimDemandButton from '@/components/ClaimDemandButton';
+import DemandWorkspace from '@/components/DemandWorkspace';
 import { db } from '@/lib/db';
 import { STATUS_LABELS } from '@/types/demand';
 import { notFound } from 'next/navigation';
@@ -12,59 +12,60 @@ export default async function DemandPage({ params }: { params: Promise<{ id: str
     include: {
       department: true,
       assignee: true,
-      assets: true,
+      assets: { orderBy: { createdAt: 'desc' } },
       comments: { include: { author: true }, orderBy: { createdAt: 'desc' } },
-      history: { orderBy: { createdAt: 'desc' } },
+      history: { include: { actor: true }, orderBy: { createdAt: 'desc' } },
     },
   });
 
   if (!demand) notFound();
 
-  const canClaim = !demand.assigneeId && !['DELIVERED', 'ARCHIVED'].includes(demand.status);
-
   return (
-    <div className="page detail">
-      <div className="detailHeader">
-        <div>
-          <span className="protocol">{demand.protocol}</span>
-          <h1>{demand.title}</h1>
-        </div>
-        <span className={`badge priority-${demand.priority}`}>{demand.priority}</span>
-      </div>
-
-      <div className="detailGrid">
-        <div className="panel">
-          <h2 className="sectionTitle">Briefing organizado</h2>
-          <div className="copyBox">{demand.briefing || 'Ainda não organizado.'}</div>
-          {demand.missingInfo && <p className="error">{demand.missingInfo}</p>}
-
-          <h2 className="sectionTitle" style={{ marginTop: 24 }}>Mensagem original</h2>
-          <div className="copyBox">{demand.originalText || 'Sem texto.'}</div>
-        </div>
-
-        <aside className="panel productionPanel">
-          <h2 className="sectionTitle">Dados da produção</h2>
-          <div className="infoList">
-            <div className="infoRow"><span>Status</span><strong>{STATUS_LABELS[demand.status] || demand.status}</strong></div>
-            <div className="infoRow"><span>Secretaria</span><strong>{demand.department?.code || '—'}</strong></div>
-            <div className="infoRow"><span>Tipo</span><strong>{demand.type}</strong></div>
-            <div className="infoRow"><span>Responsável</span><strong>{demand.assignee?.name || 'Livre'}</strong></div>
-            <div className="infoRow"><span>Solicitante</span><strong>{demand.requesterName || '—'}</strong></div>
-            <div className="infoRow"><span>Origem</span><strong>{demand.source}</strong></div>
-            <div className="infoRow"><span>Prazo</span><strong>{demand.dueAt ? demand.dueAt.toLocaleString('pt-BR') : '—'}</strong></div>
-          </div>
-
-          {canClaim && (
-            <div className="claimPanel">
-              <div className="claimPanelText">
-                <strong>Demanda disponível</strong>
-                <span>Assuma esta tarefa para iniciar a produção.</span>
-              </div>
-              <ClaimDemandButton demandId={demand.id} />
-            </div>
-          )}
-        </aside>
-      </div>
+    <div className="page detailPageWide">
+      <DemandWorkspace
+        demand={{
+          id: demand.id,
+          protocol: demand.protocol,
+          title: demand.title,
+          status: demand.status,
+          statusLabel: STATUS_LABELS[demand.status] || demand.status,
+          priority: demand.priority,
+          type: demand.type,
+          briefing: demand.briefing,
+          revisedText: demand.revisedText,
+          missingInfo: demand.missingInfo,
+          originalText: demand.originalText,
+          requesterName: demand.requesterName,
+          requesterPhone: demand.requesterPhone,
+          source: demand.source,
+          dueAt: demand.dueAt?.toISOString() ?? null,
+          createdAt: demand.createdAt.toISOString(),
+          department: demand.department ? { code: demand.department.code, name: demand.department.name } : null,
+          assignee: demand.assignee ? { name: demand.assignee.name } : null,
+          assets: demand.assets.map(asset => ({
+            id: asset.id,
+            name: asset.name,
+            url: asset.url,
+            mimeType: asset.mimeType,
+            kind: asset.kind,
+            createdAt: asset.createdAt.toISOString(),
+          })),
+          comments: demand.comments.map(comment => ({
+            id: comment.id,
+            text: comment.text,
+            createdAt: comment.createdAt.toISOString(),
+            author: comment.author ? { name: comment.author.name } : null,
+          })),
+          history: demand.history.map(item => ({
+            id: item.id,
+            action: item.action,
+            fromValue: item.fromValue,
+            toValue: item.toValue,
+            createdAt: item.createdAt.toISOString(),
+            actor: item.actor ? { name: item.actor.name } : null,
+          })),
+        }}
+      />
     </div>
   );
 }
