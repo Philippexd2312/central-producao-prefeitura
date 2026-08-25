@@ -1,0 +1,38 @@
+@media (max-width: 900px) {
+  .workspaceTopbar,
+  .mobileBottomNav,
+  .mobileSidebarBackdrop {
+    -webkit-backdrop-filter: none !important;
+    backdrop-filter: none !important;
+  }
+
+  .workspaceTopbar {
+    background: #ffffff !important;
+  }
+
+  .mobileSidebarBackdrop {
+    background: rgba(3, 22, 15, .36) !important;
+  }
+
+  .mobileBottomNav {
+    background: rgba(255,255,255,.985) !important;
+  }
+
+  .sidebar {
+    transition: transform .16s ease-out !important;
+    will-change: transform;
+  }
+
+  .card,
+  .stat,
+  .teamStat,
+  .personCard,
+  .reportStatCard {
+    box-shadow: 0 4px 12px rgba(15,49,36,.045) !important;
+  }
+
+  button,
+  a {
+    touch-action: manipulation;
+  }
+}
