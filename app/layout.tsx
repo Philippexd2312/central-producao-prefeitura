@@ -3,6 +3,7 @@ import './claim.css';
 import './demand-workspace.css';
 import './team.css';
 import './auth.css';
+import './reports.css';
 import Link from 'next/link';
 import { getCurrentUser, isManagerRole } from '@/lib/session';
 
@@ -23,6 +24,7 @@ const ROLE_LABELS: Record<string, string> = {
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
   const current = await getCurrentUser();
+  const manager = current ? isManagerRole(current.role) : false;
 
   return (
     <html lang="pt-BR">
@@ -64,7 +66,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
               </Link>
 
               <div className="navSectionLabel navSectionGap">GESTÃO</div>
-              {current && isManagerRole(current.role) && (
+              {manager && (
                 <Link className="navItem" href="/equipe/novo">
                   <span className="navIcon">＋</span>
                   <span>Cadastrar profissional</span>
@@ -74,10 +76,17 @@ export default async function RootLayout({ children }: { children: React.ReactNo
                 <span className="navIcon">⌂</span>
                 <span>Secretarias</span>
               </div>
-              <div className="navItem navItemMuted">
-                <span className="navIcon">▤</span>
-                <span>Relatórios</span>
-              </div>
+              {manager ? (
+                <Link className="navItem" href="/relatorios">
+                  <span className="navIcon">▤</span>
+                  <span>Relatórios</span>
+                </Link>
+              ) : (
+                <div className="navItem navItemMuted">
+                  <span className="navIcon">▤</span>
+                  <span>Relatórios</span>
+                </div>
+              )}
             </nav>
 
             <div className="sidebarFooter">
