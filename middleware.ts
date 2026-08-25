@@ -3,11 +3,18 @@ import { NextRequest, NextResponse } from 'next/server';
 const COOKIE_NAME = 'central_session';
 const PUBLIC_PATHS = ['/login', '/api/auth/login', '/api/webhooks/whatsapp'];
 
+function toArrayBuffer(bytes: Uint8Array) {
+  const buffer = new ArrayBuffer(bytes.byteLength);
+  new Uint8Array(buffer).set(bytes);
+  return buffer;
+}
+
 function decodeBase64Url(value: string) {
   const normalized = value.replace(/-/g, '+').replace(/_/g, '/');
   const padding = '='.repeat((4 - normalized.length % 4) % 4);
   const binary = atob(normalized + padding);
-  return Uint8Array.from(binary, char => char.charCodeAt(0));
+  const bytes = Uint8Array.from(binary, char => char.charCodeAt(0));
+  return toArrayBuffer(bytes);
 }
 
 async function isValidToken(token: string, secret: string) {
@@ -18,7 +25,7 @@ async function isValidToken(token: string, secret: string) {
     const encoder = new TextEncoder();
     const key = await crypto.subtle.importKey(
       'raw',
-      encoder.encode(secret),
+      toArrayBuffer(encoder.encode(secret)),
       { name: 'HMAC', hash: 'SHA-256' },
       false,
       ['verify'],
@@ -27,7 +34,7 @@ async function isValidToken(token: string, secret: string) {
       'HMAC',
       key,
       decodeBase64Url(signature),
-      encoder.encode(body),
+      toArrayBuffer(encoder.encode(body)),
     );
     if (!valid) return false;
 
