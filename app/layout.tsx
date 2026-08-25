@@ -5,6 +5,7 @@ import './team.css';
 import './auth.css';
 import './reports.css';
 import './mobile.css';
+import './ios.css';
 import AppChrome from '@/components/AppChrome';
 import { getCurrentUser, isManagerRole } from '@/lib/session';
 import { headers } from 'next/headers';
@@ -18,7 +19,7 @@ export const metadata = {
   appleWebApp: {
     capable: true,
     title: 'Central Comunicação',
-    statusBarStyle: 'black-translucent' as const,
+    statusBarStyle: 'default' as const,
   },
   formatDetection: {
     telephone: false,
