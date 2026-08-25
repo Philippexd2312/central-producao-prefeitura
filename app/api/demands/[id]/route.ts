@@ -5,7 +5,19 @@ import { NextResponse } from 'next/server';
 
 export async function GET(_: Request, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  const demand = await db.demand.findUnique({ where: { id }, include: { department: true, assignee: true, assets: true, comments: true, history: true } });
+  const demand = await db.demand.findUnique({
+    where: { id },
+    include: {
+      department: true,
+      assignee: true,
+      members: { include: { user: true } },
+      labels: true,
+      checklistItems: true,
+      assets: true,
+      comments: true,
+      history: true,
+    },
+  });
   if (!demand) return NextResponse.json({ error: 'Demanda não encontrada' }, { status: 404 });
   return NextResponse.json(demand);
 }
@@ -13,32 +25,27 @@ export async function GET(_: Request, { params }: { params: Promise<{ id: string
 export async function PATCH(request: Request, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const actor = await getCurrentUser();
-  if (authEnforced() && !actor) {
-    return NextResponse.json({ error: 'Entre no sistema para alterar a demanda.' }, { status: 401 });
-  }
+  if (authEnforced() && !actor) return NextResponse.json({ error: 'Entre no sistema para alterar a demanda.' }, { status: 401 });
 
   const body = await request.json();
-  const current = await db.demand.findUnique({ where: { id } });
+  const current = await db.demand.findUnique({
+    where: { id },
+    include: { members: actor ? { where: { userId: actor.id } } : false },
+  });
   if (!current) return NextResponse.json({ error: 'Demanda não encontrada' }, { status: 404 });
 
   const manager = actor ? isManagerRole(actor.role) : false;
-  if (actor && !manager && current.assigneeId !== actor.id) {
+  const member = actor ? current.members.length > 0 : false;
+  if (actor && !manager && current.assigneeId !== actor.id && !member) {
     return NextResponse.json({ error: 'Você só pode alterar demandas atribuídas a você.' }, { status: 403 });
   }
   if (actor && !manager && body.assigneeId !== undefined) {
     return NextResponse.json({ error: 'Somente a gestão pode trocar o responsável.' }, { status: 403 });
   }
 
-  const status = body.status && Object.values(DemandStatus).includes(body.status as DemandStatus)
-    ? body.status as DemandStatus
-    : undefined;
-  const priority = body.priority && Object.values(DemandPriority).includes(body.priority as DemandPriority)
-    ? body.priority as DemandPriority
-    : undefined;
-
-  const assigneeId = manager || !actor
-    ? body.assigneeId === '' ? null : body.assigneeId ?? undefined
-    : undefined;
+  const status = body.status && Object.values(DemandStatus).includes(body.status as DemandStatus) ? body.status as DemandStatus : undefined;
+  const priority = body.priority && Object.values(DemandPriority).includes(body.priority as DemandPriority) ? body.priority as DemandPriority : undefined;
+  const assigneeId = manager || !actor ? body.assigneeId === '' ? null : body.assigneeId ?? undefined : undefined;
 
   const demand = await db.demand.update({
     where: { id },
@@ -46,14 +53,12 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
       status,
       priority,
       assigneeId,
+      startAt: body.startAt === '' ? null : body.startAt ? new Date(body.startAt) : undefined,
       dueAt: body.dueAt === '' ? null : body.dueAt ? new Date(body.dueAt) : undefined,
+      title: body.title !== undefined ? String(body.title).trim().slice(0, 220) || undefined : undefined,
+      briefing: body.briefing !== undefined ? String(body.briefing).slice(0, 12000) : undefined,
       history: status && status !== current.status ? {
-        create: {
-          actorId: actor?.id,
-          action: 'STATUS_CHANGED',
-          fromValue: current.status,
-          toValue: status,
-        },
+        create: { actorId: actor?.id, action: 'STATUS_CHANGED', fromValue: current.status, toValue: status },
       } : undefined,
     },
   });
