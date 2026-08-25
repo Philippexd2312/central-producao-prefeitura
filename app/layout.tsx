@@ -4,6 +4,7 @@ import './demand-workspace.css';
 import './team.css';
 import './auth.css';
 import './reports.css';
+import './mobile.css';
 import AppChrome from '@/components/AppChrome';
 import { getCurrentUser, isManagerRole } from '@/lib/session';
 import { headers } from 'next/headers';
@@ -12,6 +13,14 @@ import { redirect } from 'next/navigation';
 export const metadata = {
   title: 'Central de Produção da Comunicação',
   description: 'Gestão de demandas de Design, Vídeo e Comunicação',
+};
+
+export const viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  maximumScale: 1,
+  viewportFit: 'cover',
+  themeColor: '#0b3c29',
 };
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
