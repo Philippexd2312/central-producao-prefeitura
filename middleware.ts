@@ -17,6 +17,17 @@ function decodeBase64Url(value: string) {
   return toArrayBuffer(bytes);
 }
 
+function continueRequest(request: NextRequest) {
+  const requestHeaders = new Headers(request.headers);
+  requestHeaders.set('x-central-pathname', request.nextUrl.pathname);
+
+  return NextResponse.next({
+    request: {
+      headers: requestHeaders,
+    },
+  });
+}
+
 async function isValidToken(token: string, secret: string) {
   const [body, signature] = token.split('.');
   if (!body || !signature) return false;
@@ -47,25 +58,24 @@ async function isValidToken(token: string, secret: string) {
 
 export async function middleware(request: NextRequest) {
   const secret = process.env.AUTH_SECRET || process.env.SESSION_SECRET;
-
-  // A partir do momento em que AUTH_SECRET existe, todas as páginas internas
-  // exigem login. Não dependemos mais de AUTH_ENFORCE para evitar acesso aberto
-  // por configuração incorreta no Railway.
-  if (!secret) return NextResponse.next();
-
   const pathname = request.nextUrl.pathname;
+
   if (PUBLIC_PATHS.some(path => pathname === path || pathname.startsWith(`${path}/`))) {
-    return NextResponse.next();
+    return continueRequest(request);
   }
 
+  if (!secret) return continueRequest(request);
+
   const token = request.cookies.get(COOKIE_NAME)?.value;
-  if (token && await isValidToken(token, secret)) return NextResponse.next();
+  if (token && await isValidToken(token, secret)) return continueRequest(request);
 
   if (pathname.startsWith('/api/')) {
     return NextResponse.json({ error: 'Não autenticado.' }, { status: 401 });
   }
 
-  const loginUrl = new URL('/login', request.url);
+  const loginUrl = request.nextUrl.clone();
+  loginUrl.pathname = '/login';
+  loginUrl.search = '';
   loginUrl.searchParams.set('next', pathname);
   return NextResponse.redirect(loginUrl);
 }
