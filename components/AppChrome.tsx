@@ -36,6 +36,8 @@ export default function AppChrome({
     return <div className="publicRouteOnly">{children}</div>;
   }
 
+  const profileHref = manager ? '/' : '/meu-painel';
+
   return (
     <div className="appShell">
       <aside className="sidebar">
@@ -53,37 +55,44 @@ export default function AppChrome({
             <span className="navIcon">▦</span>
             <span>Painel de produção</span>
           </Link>
-          {current && (
+
+          {current && !manager && (
             <Link className="navItem" href="/meu-painel">
               <span className="navIcon">◎</span>
               <span>Meu painel</span>
             </Link>
           )}
+
           <Link className="navItem" href="/demandas/nova">
             <span className="navIcon">＋</span>
             <span>Nova demanda</span>
           </Link>
+
           <div className="navItem navItemMuted">
             <span className="navIcon">◫</span>
             <span>Aprovações</span>
             <small>em breve</small>
           </div>
+
           <Link className="navItem" href="/equipe">
             <span className="navIcon">◉</span>
             <span>Equipe</span>
           </Link>
 
           <div className="navSectionLabel navSectionGap">GESTÃO</div>
+
           {manager && (
             <Link className="navItem" href="/equipe/novo">
               <span className="navIcon">＋</span>
               <span>Cadastrar profissional</span>
             </Link>
           )}
+
           <div className="navItem navItemMuted">
             <span className="navIcon">⌂</span>
             <span>Secretarias</span>
           </div>
+
           {manager ? (
             <Link className="navItem" href="/relatorios">
               <span className="navIcon">▤</span>
@@ -112,18 +121,28 @@ export default function AppChrome({
             <strong>COMUNICAÇÃO</strong>
             <span>Central de Produção</span>
           </div>
+
           <div className="topbarContext">
             <span className="breadcrumb">Comunicação / Produção</span>
             <strong>Gestão de demandas</strong>
           </div>
+
           <div className="topbarActions">
             <div className="notificationBtn" title="Notificações">●</div>
             <Link className="primaryLink" href="/demandas/nova">＋ Nova demanda</Link>
+
             {current ? (
               <div className="topbarUserActions">
-                <Link className="userChip" href="/meu-painel" title="Abrir meu painel">
+                <Link
+                  className="userChip"
+                  href={profileHref}
+                  title={manager ? 'Painel administrativo' : 'Abrir meu painel'}
+                >
                   <div className="avatar">{current.name.charAt(0).toUpperCase()}</div>
-                  <div><strong>{current.name}</strong><span>{ROLE_LABELS[current.role] ?? current.role}</span></div>
+                  <div>
+                    <strong>{current.name}</strong>
+                    <span>{ROLE_LABELS[current.role] ?? current.role}</span>
+                  </div>
                 </Link>
                 <Link className="logoutLink" href="/sair">Sair</Link>
               </div>
@@ -135,6 +154,7 @@ export default function AppChrome({
             )}
           </div>
         </header>
+
         <main className="mainContent">{children}</main>
       </div>
     </div>
