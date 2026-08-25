@@ -5,7 +5,14 @@ export const dynamic = 'force-dynamic';
 
 export default async function HomePage() {
   const demands = await db.demand.findMany({
-    include: { department: true, assignee: true },
+    include: {
+      department: true,
+      assignee: true,
+      members: { include: { user: true } },
+      labels: { orderBy: { createdAt: 'asc' } },
+      checklistItems: { orderBy: { position: 'asc' } },
+      assets: { select: { id: true, kind: true, mimeType: true } },
+    },
     orderBy: { createdAt: 'desc' },
   });
 
@@ -38,38 +45,38 @@ export default async function HomePage() {
       </section>
 
       <section className="stats" aria-label="Resumo da produção">
-        <div className="stat statNew">
-          <div className="statIcon">＋</div>
-          <div><strong>{stats.new}</strong><span>Novas / briefing</span></div>
-        </div>
-        <div className="stat statProduction">
-          <div className="statIcon">◆</div>
-          <div><strong>{stats.production}</strong><span>Em produção</span></div>
-        </div>
-        <div className="stat statApproval">
-          <div className="statIcon">✓</div>
-          <div><strong>{stats.approval}</strong><span>Aguardando aprovação</span></div>
-        </div>
-        <div className="stat statToday">
-          <div className="statIcon">◷</div>
-          <div><strong>{stats.today}</strong><span>Entregas hoje</span></div>
-        </div>
-        <div className="stat statLate">
-          <div className="statIcon">!</div>
-          <div><strong>{stats.late}</strong><span>Atrasadas</span></div>
-        </div>
+        <div className="stat statNew"><div className="statIcon">＋</div><div><strong>{stats.new}</strong><span>Novas / briefing</span></div></div>
+        <div className="stat statProduction"><div className="statIcon">◆</div><div><strong>{stats.production}</strong><span>Em produção</span></div></div>
+        <div className="stat statApproval"><div className="statIcon">✓</div><div><strong>{stats.approval}</strong><span>Aguardando aprovação</span></div></div>
+        <div className="stat statToday"><div className="statIcon">◷</div><div><strong>{stats.today}</strong><span>Entregas hoje</span></div></div>
+        <div className="stat statLate"><div className="statIcon">!</div><div><strong>{stats.late}</strong><span>Atrasadas</span></div></div>
       </section>
 
       <section className="boardSection">
         <div className="sectionHeading">
-          <div>
-            <span className="sectionKicker">FLUXO DE TRABALHO</span>
-            <h2>Quadro de produção</h2>
-          </div>
+          <div><span className="sectionKicker">FLUXO DE TRABALHO</span><h2>Quadro de produção</h2></div>
           <span className="dragHint">Arraste os cards para mudar o status</span>
         </div>
 
-        <KanbanBoard initialDemands={demands.map(d => ({ ...d, dueAt: d.dueAt?.toISOString() ?? null }))} />
+        <KanbanBoard
+          initialDemands={demands.map(d => ({
+            id: d.id,
+            protocol: d.protocol,
+            title: d.title,
+            status: d.status,
+            priority: d.priority,
+            type: d.type,
+            dueAt: d.dueAt?.toISOString() ?? null,
+            coverUrl: d.coverUrl,
+            department: d.department ? { name: d.department.name, code: d.department.code } : null,
+            assignee: d.assignee ? { name: d.assignee.name } : null,
+            members: d.members.map(member => ({ name: member.user.name })),
+            labels: d.labels.map(label => ({ id: label.id, name: label.name, color: label.color })),
+            checklistTotal: d.checklistItems.length,
+            checklistDone: d.checklistItems.filter(item => item.completed).length,
+            assetCount: d.assets.length,
+          }))}
+        />
       </section>
     </div>
   );
