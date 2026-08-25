@@ -5,20 +5,36 @@ export const dynamic = 'force-dynamic';
 
 export default async function HomePage() {
   const demands = await db.demand.findMany({
-    include: {
-      department: true,
-      assignee: true,
-      members: { include: { user: true } },
-      labels: { orderBy: { createdAt: 'asc' } },
-      checklistItems: { orderBy: { position: 'asc' } },
-      assets: { select: { id: true, kind: true, mimeType: true } },
+    select: {
+      id: true,
+      protocol: true,
+      title: true,
+      status: true,
+      priority: true,
+      type: true,
+      dueAt: true,
+      coverUrl: true,
+      createdAt: true,
+      department: { select: { name: true, code: true } },
+      assignee: { select: { name: true } },
+      members: { select: { user: { select: { name: true } } } },
+      labels: {
+        select: { id: true, name: true, color: true },
+        orderBy: { createdAt: 'asc' },
+      },
+      checklistItems: {
+        select: { completed: true },
+        orderBy: { position: 'asc' },
+      },
+      _count: { select: { assets: true } },
     },
     orderBy: { createdAt: 'desc' },
   });
 
   const today = new Date();
   const start = new Date(today.getFullYear(), today.getMonth(), today.getDate());
-  const end = new Date(start); end.setDate(end.getDate() + 1);
+  const end = new Date(start);
+  end.setDate(end.getDate() + 1);
 
   const stats = {
     new: demands.filter(d => d.status === 'NEW' || d.status === 'BRIEFING_READY').length,
@@ -74,7 +90,7 @@ export default async function HomePage() {
             labels: d.labels.map(label => ({ id: label.id, name: label.name, color: label.color })),
             checklistTotal: d.checklistItems.length,
             checklistDone: d.checklistItems.filter(item => item.completed).length,
-            assetCount: d.assets.length,
+            assetCount: d._count.assets,
           }))}
         />
       </section>
