@@ -1,17 +1,19 @@
 import Link from 'next/link';
+import { DemandStatus, UserRole } from '@prisma/client';
 import { notFound } from 'next/navigation';
 import { db } from '@/lib/db';
 import { STATUS_LABELS } from '@/types/demand';
 
 export const dynamic = 'force-dynamic';
 
-const ROLE_LABELS: Record<string, string> = {
+const ROLE_LABELS: Record<UserRole, string> = {
+  ADMIN: 'Administrador',
+  MANAGER: 'Gestão',
   DESIGNER: 'Designer',
   EDITOR: 'Editor de vídeo',
   COPYWRITER: 'Redação',
   SOCIAL_MEDIA: 'Social media',
-  MANAGER: 'Gestão',
-  ADMIN: 'Administrador',
+  REQUESTER: 'Solicitante',
 };
 
 const PRIORITY_LABELS: Record<string, string> = {
@@ -30,6 +32,8 @@ const TYPE_LABELS: Record<string, string> = {
   OTHER: 'Outros',
 };
 
+const CLOSED_STATUSES: DemandStatus[] = [DemandStatus.DELIVERED, DemandStatus.ARCHIVED];
+
 function formatDue(value: Date | null) {
   if (!value) return 'Sem prazo';
   return value.toLocaleString('pt-BR');
@@ -37,12 +41,13 @@ function formatDue(value: Date | null) {
 
 export default async function PersonDashboard({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
+
   const user = await db.user.findUnique({
     where: { id },
     include: {
       assignedDemands: {
         include: { department: true },
-        orderBy: [{ dueAt: 'asc' }, { updatedAt: 'desc' }],
+        orderBy: { updatedAt: 'desc' },
       },
     },
   });
@@ -52,10 +57,12 @@ export default async function PersonDashboard({ params }: { params: Promise<{ id
   const available = await db.demand.findMany({
     where: {
       assigneeId: null,
-      status: { in: ['NEW', 'BRIEFING_READY', 'WAITING_ASSIGNEE'] },
+      status: {
+        in: [DemandStatus.NEW, DemandStatus.BRIEFING_READY, DemandStatus.WAITING_ASSIGNEE],
+      },
     },
     include: { department: true },
-    orderBy: [{ priority: 'desc' }, { createdAt: 'asc' }],
+    orderBy: { createdAt: 'asc' },
     take: 8,
   });
 
@@ -63,12 +70,14 @@ export default async function PersonDashboard({ params }: { params: Promise<{ id
   const monthAgo = new Date(now);
   monthAgo.setDate(monthAgo.getDate() - 30);
 
-  const active = user.assignedDemands.filter(d => !['DELIVERED', 'ARCHIVED'].includes(d.status));
-  const production = active.filter(d => d.status === 'IN_PRODUCTION');
-  const approval = active.filter(d => d.status === 'WAITING_APPROVAL');
-  const changes = active.filter(d => d.status === 'CHANGES_REQUESTED');
-  const late = active.filter(d => d.dueAt && d.dueAt < now);
-  const delivered30 = user.assignedDemands.filter(d => d.status === 'DELIVERED' && d.updatedAt >= monthAgo);
+  const active = user.assignedDemands.filter(d => !CLOSED_STATUSES.includes(d.status));
+  const production = active.filter(d => d.status === DemandStatus.IN_PRODUCTION);
+  const approval = active.filter(d => d.status === DemandStatus.WAITING_APPROVAL);
+  const changes = active.filter(d => d.status === DemandStatus.CHANGES_REQUESTED);
+  const late = active.filter(d => d.dueAt !== null && d.dueAt < now);
+  const delivered30 = user.assignedDemands.filter(
+    d => d.status === DemandStatus.DELIVERED && d.updatedAt >= monthAgo,
+  );
 
   return (
     <div className="page personDashboardPage">
@@ -80,7 +89,7 @@ export default async function PersonDashboard({ params }: { params: Promise<{ id
             <div>
               <span className="eyebrow">PAINEL INDIVIDUAL</span>
               <h1>{user.name}</h1>
-              <p>{ROLE_LABELS[user.role] ?? user.role} · {user.email}</p>
+              <p>{ROLE_LABELS[user.role]} · {user.email}</p>
             </div>
           </div>
         </div>
@@ -111,7 +120,7 @@ export default async function PersonDashboard({ params }: { params: Promise<{ id
           ) : (
             <div className="personDemandList">
               {active.map(demand => {
-                const isLate = Boolean(demand.dueAt && demand.dueAt < now);
+                const isLate = demand.dueAt !== null && demand.dueAt < now;
                 return (
                   <Link href={`/demandas/${demand.id}`} className="personDemandRow" key={demand.id}>
                     <span className={`personDemandStripe status-${demand.status}`} />
