@@ -59,6 +59,12 @@ enum UserRole {
   REQUESTER
 }
 
+enum UserAvailability {
+  AVAILABLE
+  BUSY
+  AWAY
+}
+
 model Department {
   id        String   @id @default(cuid())
   name      String   @unique
@@ -69,16 +75,19 @@ model Department {
 }
 
 model User {
-  id              String          @id @default(cuid())
+  id              String           @id @default(cuid())
   name            String
-  email           String          @unique
+  email           String           @unique
   role            UserRole
-  active          Boolean         @default(true)
-  assignedDemands Demand[]        @relation("DemandAssignee")
+  active          Boolean          @default(true)
+  availability    UserAvailability @default(AVAILABLE)
+  passwordHash    String?
+  lastLoginAt     DateTime?
+  assignedDemands Demand[]         @relation("DemandAssignee")
   comments        DemandComment[]
   histories       DemandHistory[]
-  createdAt       DateTime        @default(now())
-  updatedAt       DateTime        @updatedAt
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
 }
 
 model Demand {
