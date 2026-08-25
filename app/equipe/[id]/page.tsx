@@ -1,8 +1,9 @@
 import Link from 'next/link';
 import { DemandStatus, UserRole } from '@prisma/client';
-import { notFound } from 'next/navigation';
+import { notFound, redirect } from 'next/navigation';
 import { db } from '@/lib/db';
 import { STATUS_LABELS } from '@/types/demand';
+import { authEnforced, getCurrentUser, isManagerRole } from '@/lib/session';
 
 export const dynamic = 'force-dynamic';
 
@@ -32,6 +33,12 @@ const TYPE_LABELS: Record<string, string> = {
   OTHER: 'Outros',
 };
 
+const AVAILABILITY_LABELS: Record<string, string> = {
+  AVAILABLE: 'Disponível',
+  BUSY: 'Ocupado',
+  AWAY: 'Ausente',
+};
+
 const CLOSED_STATUSES: DemandStatus[] = [DemandStatus.DELIVERED, DemandStatus.ARCHIVED];
 
 function formatDue(value: Date | null) {
@@ -41,6 +48,10 @@ function formatDue(value: Date | null) {
 
 export default async function PersonDashboard({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
+  const current = await getCurrentUser();
+
+  if (authEnforced() && !current) redirect('/login');
+  if (current && !isManagerRole(current.role) && current.id !== id) redirect('/meu-painel');
 
   const user = await db.user.findUnique({
     where: { id },
@@ -79,11 +90,14 @@ export default async function PersonDashboard({ params }: { params: Promise<{ id
     d => d.status === DemandStatus.DELIVERED && d.updatedAt >= monthAgo,
   );
 
+  const backHref = current && !isManagerRole(current.role) ? '/' : '/equipe';
+  const backLabel = current && !isManagerRole(current.role) ? '← Painel de produção' : '← Equipe';
+
   return (
     <div className="page personDashboardPage">
       <div className="personDashboardHeader">
         <div className="personDashboardIdentity">
-          <Link href="/equipe" className="backTeamLink">← Equipe</Link>
+          <Link href={backHref} className="backTeamLink">{backLabel}</Link>
           <div className="personProfileRow">
             <div className="personProfileAvatar">{user.name.charAt(0).toUpperCase()}</div>
             <div>
@@ -95,7 +109,7 @@ export default async function PersonDashboard({ params }: { params: Promise<{ id
         </div>
         <div className="personStatusCard">
           <span className="onlineDot" />
-          <div><strong>Ativo</strong><span>{active.length} demanda(s) na fila</span></div>
+          <div><strong>{AVAILABILITY_LABELS[user.availability] ?? user.availability}</strong><span>{active.length} demanda(s) na fila</span></div>
         </div>
       </div>
 
