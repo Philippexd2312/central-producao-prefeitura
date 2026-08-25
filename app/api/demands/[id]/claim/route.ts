@@ -1,5 +1,6 @@
 import { DemandStatus, UserRole } from '@prisma/client';
 import { db } from '@/lib/db';
+import { authEnforced, getCurrentUser } from '@/lib/session';
 import { NextResponse } from 'next/server';
 
 const PRODUCTION_ROLES: UserRole[] = [
@@ -13,6 +14,15 @@ const PRODUCTION_ROLES: UserRole[] = [
 
 export async function POST(_: Request, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
+  const currentUser = await getCurrentUser();
+
+  if (authEnforced() && !currentUser) {
+    return NextResponse.json({ error: 'Entre no sistema para assumir uma demanda.' }, { status: 401 });
+  }
+
+  if (currentUser && !PRODUCTION_ROLES.includes(currentUser.role)) {
+    return NextResponse.json({ error: 'Seu perfil não pode assumir demandas de produção.' }, { status: 403 });
+  }
 
   const current = await db.demand.findUnique({
     where: { id },
@@ -34,7 +44,7 @@ export async function POST(_: Request, { params }: { params: Promise<{ id: strin
     return NextResponse.json({ error: 'Esta demanda já foi encerrada.' }, { status: 409 });
   }
 
-  const user = await db.user.findFirst({
+  const user = currentUser || await db.user.findFirst({
     where: {
       active: true,
       role: { in: PRODUCTION_ROLES },
