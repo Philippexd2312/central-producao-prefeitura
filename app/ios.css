@@ -1,0 +1,71 @@
+/* Ajustes específicos para iPhone/iOS quando instalado pela Tela de Início */
+@supports (padding: max(0px)) {
+  @media (max-width: 900px) {
+    .workspaceTopbar {
+      height: auto !important;
+      min-height: 64px !important;
+      padding-top: max(8px, env(safe-area-inset-top)) !important;
+      padding-left: max(10px, env(safe-area-inset-left)) !important;
+      padding-right: max(10px, env(safe-area-inset-right)) !important;
+    }
+
+    .mainContent {
+      padding-left: env(safe-area-inset-left);
+      padding-right: env(safe-area-inset-right);
+    }
+
+    .page {
+      scroll-padding-top: calc(76px + env(safe-area-inset-top));
+    }
+
+    .field input,
+    .field select,
+    .field textarea,
+    .loginForm input,
+    .newMemberForm input,
+    .newMemberForm select {
+      scroll-margin-top: calc(84px + env(safe-area-inset-top));
+      scroll-margin-bottom: 42vh;
+    }
+
+    .formWrap .panel {
+      margin-bottom: calc(88px + env(safe-area-inset-bottom));
+    }
+  }
+}
+
+@media (display-mode: standalone) and (max-width: 900px) {
+  html,
+  body {
+    min-height: 100dvh;
+    background: #f4f8f6;
+  }
+
+  .workspaceTopbar {
+    top: 0;
+    min-height: calc(58px + env(safe-area-inset-top)) !important;
+    padding-top: calc(7px + env(safe-area-inset-top)) !important;
+    padding-bottom: 7px !important;
+  }
+
+  .sidebar {
+    padding-top: calc(16px + env(safe-area-inset-top));
+  }
+
+  .loginPage {
+    padding-top: calc(18px + env(safe-area-inset-top));
+    padding-bottom: calc(18px + env(safe-area-inset-bottom));
+  }
+
+  .mobileBottomNav {
+    bottom: max(8px, env(safe-area-inset-bottom));
+  }
+
+  .pageTitle h1,
+  .dashboardHero h1,
+  .teamHero h1,
+  .personDashboardHeader h1,
+  .reportHero h1 {
+    line-height: 1.12;
+  }
+}
