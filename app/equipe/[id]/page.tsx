@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { DemandStatus, UserRole } from '@prisma/client';
 import { notFound, redirect } from 'next/navigation';
+import AvailabilityControl from '@/components/AvailabilityControl';
 import { db } from '@/lib/db';
 import { STATUS_LABELS } from '@/types/demand';
 import { authEnforced, getCurrentUser, isManagerRole } from '@/lib/session';
@@ -92,6 +93,7 @@ export default async function PersonDashboard({ params }: { params: Promise<{ id
 
   const backHref = current && !isManagerRole(current.role) ? '/' : '/equipe';
   const backLabel = current && !isManagerRole(current.role) ? '← Painel de produção' : '← Equipe';
+  const isOwnPanel = current?.id === user.id;
 
   return (
     <div className="page personDashboardPage">
@@ -109,7 +111,14 @@ export default async function PersonDashboard({ params }: { params: Promise<{ id
         </div>
         <div className="personStatusCard">
           <span className="onlineDot" />
-          <div><strong>{AVAILABILITY_LABELS[user.availability] ?? user.availability}</strong><span>{active.length} demanda(s) na fila</span></div>
+          <div>
+            {isOwnPanel ? (
+              <AvailabilityControl initial={user.availability} />
+            ) : (
+              <strong>{AVAILABILITY_LABELS[user.availability] ?? user.availability}</strong>
+            )}
+            <span>{active.length} demanda(s) na fila</span>
+          </div>
         </div>
       </div>
 
