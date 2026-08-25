@@ -88,7 +88,12 @@ export async function transcribeAudio(bytes: Uint8Array, mimeType: string, filen
   const form = new FormData();
   form.append('model', TRANSCRIBE_MODEL);
   form.append('language', 'pt');
-  form.append('file', new Blob([bytes], { type: mimeType }), filename);
+
+  // Copia os bytes para um ArrayBuffer próprio. Isso evita a incompatibilidade
+  // SharedArrayBuffer x ArrayBuffer do Blob no build do Node/TypeScript.
+  const audioBytes = new Uint8Array(bytes.byteLength);
+  audioBytes.set(bytes);
+  form.append('file', new Blob([audioBytes.buffer], { type: mimeType }), filename);
 
   const response = await fetch('https://api.openai.com/v1/audio/transcriptions', {
     method: 'POST',
