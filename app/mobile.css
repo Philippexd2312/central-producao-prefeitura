@@ -1,0 +1,307 @@
+.mobileMenuButton,.mobileCloseButton,.mobileSidebarBackdrop,.mobileBottomNav{display:none}
+
+@media(max-width:900px){
+  html,body{width:100%;max-width:100%;overflow-x:hidden;-webkit-text-size-adjust:100%}
+  body{background:#f4f8f6}
+  button,a,input,select,textarea{-webkit-tap-highlight-color:transparent}
+  input,select,textarea{font-size:16px!important}
+
+  .appShell{display:block;min-height:100dvh;width:100%}
+  .workspace{width:100%;min-width:0}
+
+  .sidebar{
+    position:fixed;
+    inset:0 auto 0 0;
+    width:min(86vw,320px);
+    height:100dvh;
+    padding:18px 14px calc(18px + env(safe-area-inset-bottom));
+    z-index:90;
+    transform:translateX(-105%);
+    transition:transform .24s cubic-bezier(.2,.8,.2,1);
+    box-shadow:18px 0 50px rgba(4,30,20,.25);
+    overflow-y:auto;
+    overscroll-behavior:contain;
+  }
+  .sidebar.mobileOpen{transform:translateX(0)}
+  .mobileSidebarBackdrop{
+    display:block;
+    position:fixed;
+    inset:0;
+    z-index:80;
+    border:0;
+    padding:0;
+    background:rgba(3,22,15,.48);
+    backdrop-filter:blur(2px);
+  }
+  .mobileCloseButton{
+    margin-left:auto;
+    display:grid;
+    place-items:center;
+    width:38px;
+    height:38px;
+    border:1px solid rgba(255,255,255,.12);
+    border-radius:11px;
+    background:rgba(255,255,255,.07);
+    color:#fff;
+    font-size:25px;
+    line-height:1;
+  }
+  .brandBlock{padding:4px 4px 18px}
+  .brandMark{width:40px;height:40px}
+  .sideNav{gap:6px}
+  .navItem{min-height:48px;font-size:14px;padding:10px 12px}
+  .navIcon{font-size:18px}
+  .sidebarFooter{margin-top:28px}
+
+  .workspaceTopbar{
+    min-height:64px;
+    height:64px;
+    padding:8px 12px;
+    padding-top:max(8px,env(safe-area-inset-top));
+    gap:9px;
+    background:rgba(255,255,255,.96);
+    box-shadow:0 5px 20px rgba(15,49,36,.055);
+  }
+  .mobileMenuButton{
+    flex:0 0 auto;
+    width:42px;
+    height:42px;
+    display:grid;
+    align-content:center;
+    justify-items:center;
+    gap:4px;
+    border:1px solid var(--border);
+    border-radius:12px;
+    background:#fff;
+  }
+  .mobileMenuButton span{display:block;width:18px;height:2px;border-radius:999px;background:#174331}
+  .mobileBrand{display:flex;flex:1;min-width:0;flex-direction:column;line-height:1.1}
+  .mobileBrand strong{font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .mobileBrand span{font-size:9px;color:var(--muted);margin-top:3px}
+  .topbarContext,.notificationBtn{display:none}
+  .topbarActions{gap:7px;flex:0 0 auto}
+  .primaryLink{
+    min-height:40px;
+    display:grid;
+    place-items:center;
+    padding:9px 12px;
+    border-radius:11px;
+    font-size:0;
+    white-space:nowrap;
+  }
+  .primaryLink:after{content:'+ Nova';font-size:12px;font-weight:900}
+  .topbarUserActions{gap:0}
+  .topbarUserActions .userChip{padding:0}
+  .topbarUserActions .userChip>div:last-child{display:none}
+  .avatar{width:38px;height:38px}
+  .logoutLink{display:none}
+
+  .mainContent{padding-bottom:calc(76px + env(safe-area-inset-bottom));min-width:0}
+  .page{width:100%;padding:16px 12px 24px}
+  .pageTitle{margin-bottom:15px;padding:0;align-items:flex-start}
+  .pageTitle h1{font-size:24px}
+  .pageTitle p{font-size:12px;line-height:1.5}
+
+  .dashboardHero{align-items:flex-start;flex-direction:column;gap:13px;margin-bottom:15px}
+  .dashboardHero h1{font-size:29px;margin-top:4px}
+  .dashboardHero p{font-size:12px;line-height:1.5}
+  .heroSummary{width:100%;min-width:0;padding:11px 14px;border-radius:14px}
+  .heroSummary strong{font-size:24px}
+
+  .stats{
+    display:flex;
+    gap:10px;
+    margin:0 -12px 18px;
+    padding:0 12px 5px;
+    overflow-x:auto;
+    scroll-snap-type:x proximity;
+    -webkit-overflow-scrolling:touch;
+    scrollbar-width:none;
+  }
+  .stats::-webkit-scrollbar{display:none}
+  .stat{flex:0 0 168px;min-height:78px;padding:13px;border-radius:15px;scroll-snap-align:start}
+  .statIcon{width:36px;height:36px}
+  .stat strong{font-size:23px}
+  .stat span{font-size:10px}
+
+  .boardSection{margin:0;border-radius:18px;padding:13px 0 12px;overflow:hidden}
+  .sectionHeading{padding:0 12px 12px;align-items:flex-start}
+  .sectionHeading h2{font-size:19px}
+  .dragHint{display:none}
+  .boardToolbar{
+    grid-template-columns:minmax(0,1fr) minmax(0,1fr);
+    gap:8px;
+    margin-bottom:12px;
+    padding:0 12px;
+  }
+  .searchBox{grid-column:1/-1;min-height:44px}
+  .searchBox input{font-size:16px!important;padding:10px 0}
+  .boardToolbar select{min-height:44px;font-size:12px!important;padding:9px 10px}
+  .resultCount{grid-column:1/-1;padding:0 2px;font-size:10px}
+  .board{
+    display:flex;
+    grid-template-columns:none;
+    gap:10px;
+    overflow-x:auto;
+    overflow-y:hidden;
+    scroll-snap-type:x mandatory;
+    overscroll-behavior-x:contain;
+    -webkit-overflow-scrolling:touch;
+    padding:0 12px 10px;
+    scrollbar-width:none;
+  }
+  .board::-webkit-scrollbar{display:none}
+  .column{
+    flex:0 0 calc(100vw - 38px);
+    width:calc(100vw - 38px);
+    max-width:370px;
+    min-height:300px;
+    border-radius:15px;
+    scroll-snap-align:center;
+    scroll-snap-stop:always;
+  }
+  .columnHeader{position:sticky;top:0;z-index:2;background:#f1f5f3;border-radius:10px}
+  .columnTitle{font-size:13px}
+  .card{padding:14px 13px 13px;border-radius:14px}
+  .card:hover{transform:none}
+  .card h3{font-size:15px}
+  .protocol{font-size:10px}
+  .departmentLine{font-size:10px}
+  .meta{gap:6px}
+  .badge{font-size:9px;padding:5px 8px}
+  .claimButton{min-height:44px;font-size:12px}
+
+  .formWrap,.detail,.detailPageWide{width:100%;max-width:none;margin:0}
+  .panel{padding:16px;border-radius:17px}
+  .formGrid{grid-template-columns:1fr;gap:13px}
+  .field.full{grid-column:auto}
+  .field input,.field textarea,.field select{min-height:46px;border-radius:11px}
+  .field textarea{min-height:130px}
+  .actions{flex-direction:column-reverse;gap:8px}
+  .actions .btn,.btn{min-height:46px;width:100%}
+
+  .teamHero,.personDashboardHeader,.reportHero{align-items:flex-start;flex-direction:column;gap:12px;margin-bottom:15px}
+  .teamHero h1,.personDashboardHeader h1,.reportHero h1{font-size:28px}
+  .teamHeroBadge,.reportDateForm{width:100%;min-width:0}
+  .teamStats{grid-template-columns:repeat(2,minmax(0,1fr));gap:9px;margin-bottom:15px}
+  .teamStat{padding:12px;border-radius:14px;gap:9px}
+  .teamStatIcon{width:34px;height:34px}
+  .teamStat strong{font-size:22px}
+  .teamSection,.personWorkPanel,.availablePanel,.reportPanel{padding:12px;border-radius:17px}
+  .teamSectionHeader,.personPanelHeader,.reportPanelHeader{align-items:flex-start;flex-direction:column;gap:5px}
+  .peopleGrid{grid-template-columns:1fr;gap:9px}
+  .personCard{padding:13px;border-radius:15px}
+  .personLoad{gap:6px}
+  .personLoad>div{padding:9px}
+  .personStatsGrid{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+  .personStatCard{padding:11px;gap:8px}
+  .personStatCard strong{font-size:20px}
+  .personDashboardGrid{grid-template-columns:1fr;gap:10px}
+  .personDemandRow{grid-template-columns:1fr;gap:9px;padding:12px 12px 12px 16px}
+  .personDemandDue{align-items:flex-start;text-align:left}
+  .personProfileRow{align-items:center}
+
+  .demandWorkspace{gap:12px}
+  .demandHero{padding:15px;border-radius:17px;flex-direction:column;gap:14px}
+  .demandHero h1{font-size:26px;line-height:1.12}
+  .demandHeroActions{width:100%;min-width:0;grid-template-columns:1fr}
+  .statusSelect,.actionBtn{min-height:46px;font-size:12px!important}
+  .demandTabs{margin:0 -12px;padding:5px 12px;border-radius:0;border-left:0;border-right:0;scrollbar-width:none}
+  .demandTabs::-webkit-scrollbar{display:none}
+  .demandTab{min-height:42px;padding:9px 12px}
+  .demandLayout{grid-template-columns:1fr;gap:10px}
+  .demandMainCard,.demandSidebarCard{border-radius:17px}
+  .demandMainCard{padding:13px;min-height:0}
+  .demandSidebarCard{position:static;padding:14px}
+  .contentSection{padding:14px;border-radius:14px}
+  .aiSection{grid-template-columns:1fr}
+  .sectionIcon{display:none}
+  .assetMiniGrid,.assetGallery,.approvalActions{grid-template-columns:1fr}
+  .commentComposer{grid-template-columns:1fr}
+  .commentComposer button{min-height:44px}
+  .fileRow{grid-template-columns:34px minmax(0,1fr);gap:9px}
+  .fileRow>a,.fileRow>button{grid-column:1/-1}
+  .detailInfoRows>div{gap:8px}
+
+  .reportStatsGrid{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin-bottom:13px}
+  .reportStatCard{padding:11px 10px;gap:8px;border-radius:14px}
+  .reportStatCard>span{width:34px;height:34px}
+  .reportStatCard strong{font-size:22px}
+  .reportTeamTableWrap{margin:0 -1px;overflow-x:auto;-webkit-overflow-scrolling:touch}
+  .reportTable{min-width:680px}
+  .dailyTimelineRow{grid-template-columns:42px 28px minmax(0,1fr);gap:7px;padding:9px}
+  .timelineArrow{display:none}
+  .dailyTimelineMain>b{white-space:normal;line-height:1.35}
+
+  .newMemberForm{grid-template-columns:1fr;gap:12px}
+  .newMemberForm .full,.newMemberActions{grid-column:auto}
+  .newMemberActions{flex-direction:column-reverse}
+  .newMemberActions a,.newMemberActions button{width:100%;min-height:46px;text-align:center}
+
+  .mobileBottomNav{
+    position:fixed;
+    left:8px;
+    right:8px;
+    bottom:8px;
+    z-index:65;
+    min-height:62px;
+    padding:6px 7px calc(6px + env(safe-area-inset-bottom));
+    display:grid;
+    grid-template-columns:repeat(4,minmax(0,1fr));
+    align-items:end;
+    gap:3px;
+    background:rgba(255,255,255,.97);
+    border:1px solid rgba(207,221,214,.95);
+    border-radius:18px;
+    box-shadow:0 16px 40px rgba(10,49,34,.18);
+    backdrop-filter:blur(16px);
+  }
+  .mobileBottomNav a{
+    min-width:0;
+    min-height:48px;
+    display:flex;
+    flex-direction:column;
+    justify-content:center;
+    align-items:center;
+    gap:3px;
+    border-radius:12px;
+    color:#6e7e76;
+  }
+  .mobileBottomNav a>span{font-size:20px;line-height:1}
+  .mobileBottomNav a>small{max-width:100%;font-size:9px;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .mobileBottomNav a.active{background:#eaf6ef;color:#116b43}
+  .mobileBottomNav .mobileBottomPrimary{background:#168f58;color:#fff;box-shadow:0 7px 18px rgba(22,143,88,.22)}
+  .mobileBottomNav .mobileBottomPrimary.active{background:#0f7346;color:#fff}
+
+  .publicRouteOnly,.publicAuthBody{min-height:100dvh;width:100%}
+  .loginPage{min-height:100dvh;padding:18px}
+  .loginCard{width:100%;max-width:410px;padding:24px;border-radius:20px}
+  .loginForm input,.loginForm button{min-height:48px}
+}
+
+@media(max-width:520px){
+  .workspaceTopbar{padding-left:9px;padding-right:9px}
+  .mobileMenuButton{width:40px;height:40px}
+  .primaryLink{padding:8px 10px}
+  .topbarUserActions .avatar{width:36px;height:36px}
+  .page{padding:14px 10px 20px}
+  .dashboardHero h1,.teamHero h1,.personDashboardHeader h1,.reportHero h1{font-size:26px}
+  .stats{margin-left:-10px;margin-right:-10px;padding-left:10px;padding-right:10px}
+  .boardToolbar,.sectionHeading{padding-left:10px;padding-right:10px}
+  .board{padding-left:10px;padding-right:10px}
+  .column{flex-basis:calc(100vw - 30px);width:calc(100vw - 30px)}
+  .teamStats,.personStatsGrid,.reportStatsGrid{grid-template-columns:1fr 1fr}
+  .teamStat span,.personStatCard span:last-child{font-size:9px}
+  .reportDateForm>div{flex-direction:column}
+  .reportDateForm button{min-height:44px}
+  .demandHeroMeta{gap:6px}
+  .heroPill{font-size:9px;padding:5px 8px}
+}
+
+@media(max-width:380px){
+  .mobileBrand{display:none}
+  .topbarActions{margin-left:auto}
+  .primaryLink:after{content:'+'}
+  .teamStats,.personStatsGrid,.reportStatsGrid{grid-template-columns:1fr}
+  .mobileBottomNav a>small{font-size:8px}
+}
