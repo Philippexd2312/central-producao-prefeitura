@@ -6,6 +6,8 @@ import './auth.css';
 import './reports.css';
 import AppChrome from '@/components/AppChrome';
 import { getCurrentUser, isManagerRole } from '@/lib/session';
+import { headers } from 'next/headers';
+import { redirect } from 'next/navigation';
 
 export const metadata = {
   title: 'Central de Produção da Comunicação',
@@ -13,7 +15,16 @@ export const metadata = {
 };
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
+  const headerStore = await headers();
+  const pathname = headerStore.get('x-central-pathname') || '/';
+  const publicRoute = pathname === '/login' || pathname.startsWith('/login/');
+
   const user = await getCurrentUser();
+
+  if (!user && !publicRoute) {
+    redirect(`/login?next=${encodeURIComponent(pathname)}`);
+  }
+
   const current = user
     ? {
         id: user.id,
