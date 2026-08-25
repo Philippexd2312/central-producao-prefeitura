@@ -1,6 +1,8 @@
 import Link from 'next/link';
+import { redirect } from 'next/navigation';
 import { DemandStatus, UserRole } from '@prisma/client';
 import { db } from '@/lib/db';
+import { authEnforced, getCurrentUser, isManagerRole } from '@/lib/session';
 
 export const dynamic = 'force-dynamic';
 
@@ -26,6 +28,10 @@ const ROLE_LABELS: Record<UserRole, string> = {
 const CLOSED_STATUSES: DemandStatus[] = [DemandStatus.DELIVERED, DemandStatus.ARCHIVED];
 
 export default async function TeamPage() {
+  const current = await getCurrentUser();
+  if (authEnforced() && !current) redirect('/login');
+  if (current && !isManagerRole(current.role)) redirect('/meu-painel');
+
   const users = await db.user.findMany({
     where: {
       active: true,
@@ -72,9 +78,14 @@ export default async function TeamPage() {
           <h1>Painéis individuais</h1>
           <p>Cada profissional acompanha sua própria fila, prazos, aprovações e entregas.</p>
         </div>
-        <div className="teamHeroBadge">
-          <strong>{totals.people}</strong>
-          <span>profissional(is) ativo(s)</span>
+        <div className="teamHeroActions">
+          {current && isManagerRole(current.role) && (
+            <Link href="/equipe/novo" className="teamPrimaryAction">＋ Cadastrar profissional</Link>
+          )}
+          <div className="teamHeroBadge">
+            <strong>{totals.people}</strong>
+            <span>profissional(is) ativo(s)</span>
+          </div>
         </div>
       </div>
 
@@ -115,6 +126,9 @@ export default async function TeamPage() {
                       <strong>{user.name}</strong>
                       <span>{ROLE_LABELS[user.role]}</span>
                     </div>
+                    <span className={user.passwordHash ? 'accessBadge on' : 'accessBadge off'}>
+                      {user.passwordHash ? 'Acesso ativo' : 'Sem login'}
+                    </span>
                     <span className="personArrow">→</span>
                   </div>
 
