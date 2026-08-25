@@ -13,13 +13,29 @@ import { redirect } from 'next/navigation';
 export const metadata = {
   title: 'Central de Produção da Comunicação',
   description: 'Gestão de demandas de Design, Vídeo e Comunicação',
+  applicationName: 'Central Comunicação',
+  manifest: '/manifest.webmanifest',
+  appleWebApp: {
+    capable: true,
+    title: 'Central Comunicação',
+    statusBarStyle: 'black-translucent' as const,
+  },
+  formatDetection: {
+    telephone: false,
+  },
+  other: {
+    'mobile-web-app-capable': 'yes',
+  },
 };
 
 export const viewport = {
   width: 'device-width',
   initialScale: 1,
+  maximumScale: 1,
+  userScalable: false,
   viewportFit: 'cover',
   themeColor: '#0b3c29',
+  colorScheme: 'light',
 };
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
