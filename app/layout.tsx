@@ -1,5 +1,6 @@
 import './globals.css';
 import './claim.css';
+import './demand-workspace.css';
 import Link from 'next/link';
 
 export const metadata = {
