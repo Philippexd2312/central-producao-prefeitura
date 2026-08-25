@@ -73,5 +73,5 @@ export function isManagerRole(role?: string | null) {
 }
 
 export function authEnforced() {
-  return process.env.AUTH_ENFORCE === 'true';
+  return Boolean(getSecret());
 }
