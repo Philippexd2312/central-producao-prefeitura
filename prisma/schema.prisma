@@ -75,19 +75,20 @@ model Department {
 }
 
 model User {
-  id              String           @id @default(cuid())
-  name            String
-  email           String           @unique
-  role            UserRole
-  active          Boolean          @default(true)
-  availability    UserAvailability @default(AVAILABLE)
-  passwordHash    String?
-  lastLoginAt     DateTime?
-  assignedDemands Demand[]         @relation("DemandAssignee")
-  comments        DemandComment[]
-  histories       DemandHistory[]
-  createdAt       DateTime         @default(now())
-  updatedAt       DateTime         @updatedAt
+  id                String           @id @default(cuid())
+  name              String
+  email             String           @unique
+  role              UserRole
+  active            Boolean          @default(true)
+  availability      UserAvailability @default(AVAILABLE)
+  passwordHash      String?
+  lastLoginAt       DateTime?
+  assignedDemands   Demand[]         @relation("DemandAssignee")
+  demandMemberships DemandMember[]
+  comments          DemandComment[]
+  histories         DemandHistory[]
+  createdAt         DateTime         @default(now())
+  updatedAt         DateTime         @updatedAt
 }
 
 model Demand {
@@ -101,7 +102,9 @@ model Demand {
   type            DemandType      @default(DESIGN)
   status          DemandStatus    @default(NEW)
   priority        DemandPriority  @default(NORMAL)
+  startAt         DateTime?
   dueAt           DateTime?
+  coverUrl        String?
   requesterName   String?
   requesterPhone  String?
   source           String          @default("WEB")
@@ -109,6 +112,9 @@ model Demand {
   department      Department?      @relation(fields: [departmentId], references: [id])
   assigneeId      String?
   assignee        User?            @relation("DemandAssignee", fields: [assigneeId], references: [id])
+  members         DemandMember[]
+  labels          DemandLabel[]
+  checklistItems  DemandChecklistItem[]
   assets          DemandAsset[]
   comments        DemandComment[]
   history         DemandHistory[]
@@ -120,6 +126,41 @@ model Demand {
   @@index([departmentId])
   @@index([assigneeId])
   @@index([dueAt])
+}
+
+model DemandMember {
+  demandId String
+  userId   String
+  demand   Demand @relation(fields: [demandId], references: [id], onDelete: Cascade)
+  user     User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@id([demandId, userId])
+  @@index([userId])
+}
+
+model DemandLabel {
+  id        String   @id @default(cuid())
+  demandId  String
+  demand    Demand   @relation(fields: [demandId], references: [id], onDelete: Cascade)
+  name      String
+  color     String
+  createdAt DateTime @default(now())
+
+  @@index([demandId])
+}
+
+model DemandChecklistItem {
+  id        String   @id @default(cuid())
+  demandId  String
+  demand    Demand   @relation(fields: [demandId], references: [id], onDelete: Cascade)
+  text      String
+  completed Boolean  @default(false)
+  position  Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([demandId])
 }
 
 model DemandAsset {
