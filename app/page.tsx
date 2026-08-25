@@ -21,24 +21,56 @@ export default async function HomePage() {
     today: demands.filter(d => d.dueAt && d.dueAt >= start && d.dueAt < end).length,
   };
 
+  const totalOpen = demands.filter(d => !['DELIVERED', 'ARCHIVED'].includes(d.status)).length;
+
   return (
-    <div className="page">
-      <div className="pageTitle">
+    <div className="page dashboardPage">
+      <section className="dashboardHero">
         <div>
+          <div className="eyebrow">CENTRAL DE COMUNICAÇÃO</div>
           <h1>Fila de Produção</h1>
-          <p>Design, vídeo, fotografia e comunicação em um único fluxo.</p>
+          <p>Acompanhe as demandas, responsáveis e aprovações da equipe em um único lugar.</p>
         </div>
-      </div>
+        <div className="heroSummary">
+          <span>Demandas abertas</span>
+          <strong>{totalOpen}</strong>
+        </div>
+      </section>
 
-      <div className="stats">
-        <div className="stat"><strong>{stats.new}</strong><span>novas / briefing</span></div>
-        <div className="stat"><strong>{stats.production}</strong><span>em produção</span></div>
-        <div className="stat"><strong>{stats.approval}</strong><span>aguardando aprovação</span></div>
-        <div className="stat"><strong>{stats.today}</strong><span>entregas hoje</span></div>
-        <div className="stat"><strong>{stats.late}</strong><span>atrasadas</span></div>
-      </div>
+      <section className="stats" aria-label="Resumo da produção">
+        <div className="stat statNew">
+          <div className="statIcon">＋</div>
+          <div><strong>{stats.new}</strong><span>Novas / briefing</span></div>
+        </div>
+        <div className="stat statProduction">
+          <div className="statIcon">◆</div>
+          <div><strong>{stats.production}</strong><span>Em produção</span></div>
+        </div>
+        <div className="stat statApproval">
+          <div className="statIcon">✓</div>
+          <div><strong>{stats.approval}</strong><span>Aguardando aprovação</span></div>
+        </div>
+        <div className="stat statToday">
+          <div className="statIcon">◷</div>
+          <div><strong>{stats.today}</strong><span>Entregas hoje</span></div>
+        </div>
+        <div className="stat statLate">
+          <div className="statIcon">!</div>
+          <div><strong>{stats.late}</strong><span>Atrasadas</span></div>
+        </div>
+      </section>
 
-      <KanbanBoard initialDemands={demands.map(d => ({ ...d, dueAt: d.dueAt?.toISOString() ?? null }))} />
+      <section className="boardSection">
+        <div className="sectionHeading">
+          <div>
+            <span className="sectionKicker">FLUXO DE TRABALHO</span>
+            <h2>Quadro de produção</h2>
+          </div>
+          <span className="dragHint">Arraste os cards para mudar o status</span>
+        </div>
+
+        <KanbanBoard initialDemands={demands.map(d => ({ ...d, dueAt: d.dueAt?.toISOString() ?? null }))} />
+      </section>
     </div>
   );
 }
