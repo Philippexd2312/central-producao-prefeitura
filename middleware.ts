@@ -57,27 +57,29 @@ async function isValidToken(token: string, secret: string) {
 }
 
 export async function middleware(request: NextRequest) {
-  const secret = process.env.AUTH_SECRET || process.env.SESSION_SECRET;
   const pathname = request.nextUrl.pathname;
 
   if (PUBLIC_PATHS.some(path => pathname === path || pathname.startsWith(`${path}/`))) {
     return continueRequest(request);
   }
 
-  if (!secret) return continueRequest(request);
-
-  const token = request.cookies.get(COOKIE_NAME)?.value;
-  if (token && await isValidToken(token, secret)) return continueRequest(request);
-
-  if (pathname.startsWith('/api/')) {
-    return NextResponse.json({ error: 'Não autenticado.' }, { status: 401 });
+  // Páginas são autenticadas no RootLayout, usando a mesma validação Node
+  // usada pelo restante do sistema. Isso evita divergência entre Edge e Node.
+  if (!pathname.startsWith('/api/')) {
+    return continueRequest(request);
   }
 
-  const loginUrl = request.nextUrl.clone();
-  loginUrl.pathname = '/login';
-  loginUrl.search = '';
-  loginUrl.searchParams.set('next', pathname);
-  return NextResponse.redirect(loginUrl);
+  const secret = process.env.AUTH_SECRET || process.env.SESSION_SECRET;
+  if (!secret) {
+    return NextResponse.json({ error: 'Autenticação não configurada.' }, { status: 503 });
+  }
+
+  const token = request.cookies.get(COOKIE_NAME)?.value;
+  if (token && await isValidToken(token, secret)) {
+    return continueRequest(request);
+  }
+
+  return NextResponse.json({ error: 'Não autenticado.' }, { status: 401 });
 }
 
 export const config = {
