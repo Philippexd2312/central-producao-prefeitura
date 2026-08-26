@@ -85,9 +85,13 @@ export default function NewDemandForm({ departments }: { departments: { id: stri
     if (event.dataTransfer.files?.length) addFiles(event.dataTransfer.files);
   }
 
-  async function submit(event: FormEvent<HTMLFormElement>, mode: 'manual' | 'ai') {
+  async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (savingMode) return;
+
+    const nativeEvent = event.nativeEvent as SubmitEvent;
+    const submitter = nativeEvent.submitter as HTMLButtonElement | null;
+    const mode: 'manual' | 'ai' = submitter?.value === 'ai' ? 'ai' : 'manual';
 
     setSavingMode(mode);
     setError('');
@@ -134,7 +138,7 @@ export default function NewDemandForm({ departments }: { departments: { id: stri
   }
 
   return (
-    <form className="panel newDemandPanel" onSubmit={event => submit(event, 'manual')}>
+    <form className="panel newDemandPanel" onSubmit={submit}>
       <div className="newDemandModeNotice">
         <div>
           <strong>Cadastro manual ou com IA</strong>
@@ -264,6 +268,8 @@ export default function NewDemandForm({ departments }: { departments: { id: stri
       <div className="newDemandActions">
         <button
           type="submit"
+          name="submitMode"
+          value="manual"
           className="btn manualCreateButton"
           disabled={Boolean(savingMode)}
         >
@@ -271,13 +277,11 @@ export default function NewDemandForm({ departments }: { departments: { id: stri
           <div><strong>{savingMode === 'manual' ? 'Criando...' : 'Criar sem IA'}</strong><small>Entra direto na fila</small></div>
         </button>
         <button
-          type="button"
+          type="submit"
+          name="submitMode"
+          value="ai"
           className="btn btnPrimary aiCreateButton"
           disabled={Boolean(savingMode)}
-          onClick={event => {
-            const form = event.currentTarget.closest('form');
-            if (form) submit({ preventDefault: () => undefined, currentTarget: form } as unknown as FormEvent<HTMLFormElement>, 'ai');
-          }}
         >
           <span>✦</span>
           <div><strong>{savingMode === 'ai' ? 'Organizando...' : 'Organizar com IA'}</strong><small>Corrige e monta o briefing</small></div>
