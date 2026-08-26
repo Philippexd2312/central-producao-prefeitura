@@ -10,6 +10,7 @@ import './premium-workspace.css';
 import './mobile-performance.css';
 import './mobile-polish.css';
 import './new-demand.css';
+import './kanban-drag.css';
 import AppChrome from '@/components/AppChrome';
 import IOSStandaloneDetector from '@/components/IOSStandaloneDetector';
 import { getCurrentUser, isManagerRole } from '@/lib/session';
