@@ -11,7 +11,7 @@ export default async function NewDemandPage() {
       <div className="pageTitle">
         <div>
           <h1>Nova demanda</h1>
-          <p>O sistema organiza o pedido e transforma a mensagem em briefing.</p>
+          <p>Cadastre manualmente ou use a IA para organizar o briefing. Os anexos entram junto nos dois modos.</p>
         </div>
       </div>
       <NewDemandForm departments={departments} />
