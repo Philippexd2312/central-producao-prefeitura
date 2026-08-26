@@ -39,6 +39,7 @@ export default function AppChrome({
   const router = useRouter();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const publicRoute = pathname === '/login' || pathname.startsWith('/login/');
+  const isNewDemandPage = pathname === '/demandas/nova' || pathname.startsWith('/demandas/nova/');
 
   useEffect(() => {
     setMobileMenuOpen(false);
@@ -74,7 +75,7 @@ export default function AppChrome({
   }
 
   return (
-    <div className="appShell">
+    <div className={`appShell${isNewDemandPage ? ' newDemandRoute' : ''}`}>
       {mobileMenuOpen && (
         <button
           type="button"
@@ -193,7 +194,7 @@ export default function AppChrome({
 
           <div className="topbarActions">
             <div className="notificationBtn" title="Notificações">●</div>
-            <Link className="primaryLink" href="/demandas/nova">＋ Nova demanda</Link>
+            {!isNewDemandPage && <Link className="primaryLink" href="/demandas/nova">＋ Nova demanda</Link>}
 
             {current ? (
               <div className="topbarUserActions">
