@@ -40,7 +40,6 @@ function countdown(days: number) {
 export default function EditorialCalendar({ initialEvents, departments, manager }: { initialEvents: CalendarItem[]; departments: Department[]; manager: boolean }) {
   const router = useRouter();
   const [events, setEvents] = useState(initialEvents);
-  const [type, setType] = useState('COMMEMORATIVE');
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState('');
 
@@ -49,58 +48,35 @@ export default function EditorialCalendar({ initialEvents, departments, manager 
   }, [initialEvents]);
 
   const upcoming = useMemo(() => [...events].sort((a, b) => a.daysUntil - b.daysUntil), [events]);
+  const birthdays = useMemo(() => upcoming.filter(item => item.type === 'BIRTHDAY').length, [upcoming]);
+  const commemoratives = upcoming.length - birthdays;
 
-  async function createEvent(event: FormEvent<HTMLFormElement>) {
+  async function createBirthday(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const formElement = event.currentTarget;
     setSaving(true);
     setMessage('');
     const form = new FormData(formElement);
     const payload = Object.fromEntries(form.entries());
-    payload.type = type;
-    payload.annual = form.get('annual') === 'on' ? 'true' : 'false';
 
     const res = await fetch('/api/calendar', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        ...payload,
-        annual: payload.annual === 'true',
-        leadDays: Number(payload.leadDays || 3),
-      }),
+      body: JSON.stringify({ ...payload, leadDays: Number(payload.leadDays || 3) }),
     });
     const data = await res.json().catch(() => ({}));
     setSaving(false);
     if (!res.ok) {
-      setMessage(data.error || 'Não foi possível salvar.');
+      setMessage(data.error || 'Não foi possível salvar o aniversário.');
       return;
     }
     formElement.reset();
-    setType('COMMEMORATIVE');
-    setMessage('Data adicionada ao calendário.');
+    setMessage('Aniversário cadastrado. O aviso será repetido todos os anos.');
     router.refresh();
   }
 
-  async function seedBase() {
-    setSaving(true);
-    setMessage('');
-    const res = await fetch('/api/calendar', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ action: 'seed_base' }),
-    });
-    const data = await res.json().catch(() => ({}));
-    setSaving(false);
-    if (!res.ok) {
-      setMessage(data.error || 'Não foi possível importar.');
-      return;
-    }
-    setMessage(`${data.created || 0} datas adicionadas ao calendário-base.`);
-    router.refresh();
-  }
-
-  async function removeEvent(id: string) {
-    if (!confirm('Remover esta data do calendário?')) return;
+  async function removeBirthday(id: string) {
+    if (!confirm('Remover este aniversário do calendário?')) return;
     const res = await fetch(`/api/calendar/${id}`, { method: 'DELETE' });
     if (!res.ok) return;
     setEvents(current => current.filter(item => item.id !== id));
@@ -122,43 +98,30 @@ export default function EditorialCalendar({ initialEvents, departments, manager 
         <div>
           <span className="sectionKicker">PLANEJAMENTO DA COMUNICAÇÃO</span>
           <h1>Calendário Editorial</h1>
-          <p>Datas comemorativas, aniversários e campanhas entram no radar da equipe antes de virar urgência.</p>
+          <p>As datas comemorativas já vêm cadastradas automaticamente. Você só precisa cadastrar os aniversários da gestão.</p>
         </div>
         <div className="calendarHeroStat"><span>Próximas datas</span><strong>{upcoming.length}</strong></div>
       </section>
 
       {manager && (
         <div className="calendarTopGrid">
-          <section className="calendarFormCard">
+          <section className="calendarFormCard birthdayOnlyCard">
             <div className="calendarCardHeader">
-              <div><span className="sectionKicker">NOVA DATA</span><h2>Adicionar ao calendário</h2></div>
-              <button type="button" className="calendarBaseButton" onClick={seedBase} disabled={saving}>＋ Calendário-base</button>
+              <div><span className="sectionKicker">ANIVERSÁRIOS</span><h2>Cadastrar aniversário</h2></div>
+              <span className="calendarAutoBadge">✓ Datas comemorativas automáticas</span>
             </div>
-            <form onSubmit={createEvent} className="calendarForm">
-              <div className="calendarTypeTabs">
-                {Object.entries(TYPE_LABELS).map(([value, label]) => (
-                  <button key={value} type="button" className={type === value ? 'active' : ''} onClick={() => setType(value)}>{label}</button>
-                ))}
-              </div>
-
+            <form onSubmit={createBirthday} className="calendarForm">
               <div className="calendarFormGrid">
-                <label className="full">Nome da data
-                  <input name="title" required placeholder={type === 'BIRTHDAY' ? 'Ex.: Aniversário do Prefeito' : 'Ex.: Dia da Árvore'} />
+                <label>Nome da pessoa
+                  <input name="personName" required placeholder="Ex.: João da Silva" />
                 </label>
-                {type === 'BIRTHDAY' && (
-                  <>
-                    <label>Nome da pessoa
-                      <input name="personName" placeholder="Nome do prefeito ou secretário" />
-                    </label>
-                    <label>Cargo
-                      <input name="personRole" placeholder="Ex.: Secretário Municipal de Saúde" />
-                    </label>
-                  </>
-                )}
-                <label>Data
+                <label>Cargo
+                  <input name="personRole" placeholder="Ex.: Prefeito, Vice-Prefeito, Secretário de Saúde" />
+                </label>
+                <label>Data do aniversário
                   <input name="eventDate" type="date" required />
                 </label>
-                <label>Antecedência
+                <label>Antecedência do aviso
                   <select name="leadDays" defaultValue="3">
                     <option value="1">1 dia antes</option>
                     <option value="2">2 dias antes</option>
@@ -169,34 +132,34 @@ export default function EditorialCalendar({ initialEvents, departments, manager 
                     <option value="15">15 dias antes</option>
                   </select>
                 </label>
-                <label>Secretaria relacionada
+                <label className="full">Secretaria / órgão
                   <select name="departmentId" defaultValue="">
                     <option value="">Geral / Prefeitura</option>
                     {departments.map(dep => <option key={dep.id} value={dep.id}>{dep.code} — {dep.name}</option>)}
                   </select>
                 </label>
-                <label className="calendarRepeat"><input name="annual" type="checkbox" defaultChecked /> Repetir todos os anos</label>
-                <label className="full">Observação / briefing inicial
-                  <textarea name="description" placeholder="Ex.: criar card institucional para feed e story, usar identidade da campanha..." />
+                <label className="full">Observação para a arte
+                  <textarea name="description" placeholder="Ex.: fazer card institucional de aniversário para feed e story, usar foto oficial..." />
                 </label>
               </div>
 
-              <button className="calendarSaveButton" disabled={saving}>{saving ? 'Salvando...' : '＋ Adicionar data'}</button>
+              <button className="calendarSaveButton" disabled={saving}>{saving ? 'Salvando...' : '＋ Cadastrar aniversário'}</button>
             </form>
             {message && <div className="calendarMessage">{message}</div>}
           </section>
 
           <aside className="calendarInfoCard">
             <span className="calendarInfoIcon">◷</span>
-            <h2>Aviso automático</h2>
-            <p>Com antecedência de <strong>3 dias</strong>, a data aparece destacada no painel da produção.</p>
-            <div className="calendarFlowMini"><span>Data cadastrada</span><i>→</i><span>Faltam 3 dias</span><i>→</i><span>Criar demanda</span></div>
+            <h2>Calendário automático</h2>
+            <p>O sistema já mantém <strong>{commemoratives} datas comemorativas futuras</strong> no radar e destaca cada uma conforme a antecedência configurada.</p>
+            <div className="calendarFlowMini"><span>Data automática</span><i>→</i><span>Faltam 3 dias</span><i>→</i><span>Criar arte</span></div>
+            <p className="calendarBirthdayCount">Aniversários cadastrados: <strong>{birthdays}</strong></p>
           </aside>
         </div>
       )}
 
       <section className="calendarListCard">
-        <div className="calendarCardHeader"><div><span className="sectionKicker">AGENDA</span><h2>Próximas datas</h2></div></div>
+        <div className="calendarCardHeader"><div><span className="sectionKicker">AGENDA COMPLETA</span><h2>Próximas datas</h2></div><span className="calendarListHint">Datas comemorativas + aniversários</span></div>
         <div className="calendarEventGrid">
           {upcoming.map(item => (
             <article className={`calendarEventCard type-${item.type}`} key={item.id}>
@@ -210,11 +173,11 @@ export default function EditorialCalendar({ initialEvents, departments, manager 
               </div>
               <div className="calendarEventActions">
                 <button onClick={() => createDemand(item.id)}>Criar demanda</button>
-                {manager && <button className="calendarDelete" onClick={() => removeEvent(item.id)}>×</button>}
+                {manager && item.type === 'BIRTHDAY' && <button className="calendarDelete" onClick={() => removeBirthday(item.id)}>×</button>}
               </div>
             </article>
           ))}
-          {upcoming.length === 0 && <div className="calendarEmpty">Nenhuma data cadastrada ainda.</div>}
+          {upcoming.length === 0 && <div className="calendarEmpty">Nenhuma data encontrada.</div>}
         </div>
       </section>
     </div>
