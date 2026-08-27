@@ -1,35 +1,44 @@
+import CalendarAlerts from '@/components/CalendarAlerts';
 import KanbanBoard from '@/components/KanbanBoard';
 import { db } from '@/lib/db';
+import { calendarDaysUntil, nextOccurrence } from '@/lib/editorial-calendar';
 
 export const dynamic = 'force-dynamic';
 
 export default async function HomePage() {
-  const demands = await db.demand.findMany({
-    select: {
-      id: true,
-      protocol: true,
-      title: true,
-      status: true,
-      priority: true,
-      type: true,
-      dueAt: true,
-      coverUrl: true,
-      createdAt: true,
-      department: { select: { name: true, code: true } },
-      assignee: { select: { name: true } },
-      members: { select: { user: { select: { name: true } } } },
-      labels: {
-        select: { id: true, name: true, color: true },
-        orderBy: { createdAt: 'asc' },
+  const [demands, calendarEvents] = await Promise.all([
+    db.demand.findMany({
+      select: {
+        id: true,
+        protocol: true,
+        title: true,
+        status: true,
+        priority: true,
+        type: true,
+        dueAt: true,
+        coverUrl: true,
+        createdAt: true,
+        department: { select: { name: true, code: true } },
+        assignee: { select: { name: true } },
+        members: { select: { user: { select: { name: true } } } },
+        labels: {
+          select: { id: true, name: true, color: true },
+          orderBy: { createdAt: 'asc' },
+        },
+        checklistItems: {
+          select: { completed: true },
+          orderBy: { position: 'asc' },
+        },
+        _count: { select: { assets: true } },
       },
-      checklistItems: {
-        select: { completed: true },
-        orderBy: { position: 'asc' },
-      },
-      _count: { select: { assets: true } },
-    },
-    orderBy: { createdAt: 'desc' },
-  });
+      orderBy: { createdAt: 'desc' },
+    }),
+    db.calendarEvent.findMany({
+      where: { active: true },
+      include: { department: { select: { code: true, name: true } } },
+      orderBy: { eventDate: 'asc' },
+    }),
+  ]);
 
   const today = new Date();
   const start = new Date(today.getFullYear(), today.getMonth(), today.getDate());
@@ -45,6 +54,26 @@ export default async function HomePage() {
   };
 
   const totalOpen = demands.filter(d => !['DELIVERED', 'ARCHIVED'].includes(d.status)).length;
+
+  const calendarAlerts = calendarEvents
+    .map(event => {
+      const occurrence = nextOccurrence(event, today);
+      const daysUntil = calendarDaysUntil(occurrence, today);
+      return {
+        id: event.id,
+        title: event.title,
+        type: event.type,
+        personName: event.personName,
+        personRole: event.personRole,
+        occurrence: occurrence.toISOString(),
+        daysUntil,
+        leadDays: event.leadDays,
+        department: event.department,
+      };
+    })
+    .filter(item => item.daysUntil >= 0 && item.daysUntil <= item.leadDays)
+    .sort((a, b) => a.daysUntil - b.daysUntil)
+    .slice(0, 6);
 
   return (
     <div className="page dashboardPage">
@@ -67,6 +96,8 @@ export default async function HomePage() {
         <div className="stat statToday"><div className="statIcon">◷</div><div><strong>{stats.today}</strong><span>Entregas hoje</span></div></div>
         <div className="stat statLate"><div className="statIcon">!</div><div><strong>{stats.late}</strong><span>Atrasadas</span></div></div>
       </section>
+
+      <CalendarAlerts alerts={calendarAlerts} />
 
       <section className="boardSection">
         <div className="sectionHeading">
