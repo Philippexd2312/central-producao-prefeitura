@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
-import { usePathname, useRouter } from 'next/navigation';
+import { usePathname } from 'next/navigation';
 
 export type AppUser = { id: string; name: string; email: string; role: string };
 
@@ -17,7 +17,6 @@ function activeClass(pathname: string, href: string) {
 
 export default function AppChrome({ children, current, manager }: { children: React.ReactNode; current: AppUser | null; manager: boolean }) {
   const pathname = usePathname();
-  const router = useRouter();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const publicRoute = pathname === '/login' || pathname.startsWith('/login/');
   const isNewDemandPage = pathname === '/demandas/nova' || pathname.startsWith('/demandas/nova/');
@@ -32,23 +31,6 @@ export default function AppChrome({ children, current, manager }: { children: Re
     };
   }, [mobileMenuOpen]);
 
-  useEffect(() => {
-    if (publicRoute || !current) return;
-    if (manager) {
-      router.prefetch('/');
-      router.prefetch('/demandas/nova');
-      router.prefetch('/equipe');
-      router.prefetch('/calendario');
-      router.prefetch('/aprovacoes');
-      router.prefetch('/relatorios');
-      router.prefetch('/equipe/novo');
-      router.prefetch('/secretarias');
-      router.prefetch('/configuracoes/whatsapp');
-    } else {
-      router.prefetch('/meu-painel');
-    }
-  }, [current, manager, publicRoute, router]);
-
   function openMobileMenu() {
     setMobileMenuOpen(true);
   }
@@ -62,13 +44,13 @@ export default function AppChrome({ children, current, manager }: { children: Re
 
   return (
     <div className={`appShell${isNewDemandPage ? ' newDemandRoute' : ''}${manager ? '' : ' designerShell'}`}>
-      {mobileMenuOpen && <button type="button" className="mobileSidebarBackdrop" aria-label="Fechar menu" onClick={closeMobileMenu} onTouchStart={closeMobileMenu} />}
+      {mobileMenuOpen && <button type="button" className="mobileSidebarBackdrop" aria-label="Fechar menu" onClick={closeMobileMenu} />}
 
       <aside className={`sidebar${mobileMenuOpen ? ' mobileOpen' : ''}`}>
         <div className="brandBlock">
           <div className="brandMark">C</div>
           <div><strong>COMUNICAÇÃO</strong><span>Central de Produção</span></div>
-          <button type="button" className="mobileCloseButton" aria-label="Fechar menu" onClick={closeMobileMenu} onTouchStart={closeMobileMenu}>×</button>
+          <button type="button" className="mobileCloseButton" aria-label="Fechar menu" onClick={closeMobileMenu}>×</button>
         </div>
 
         <nav className="sideNav" aria-label="Navegação principal">
@@ -106,7 +88,6 @@ export default function AppChrome({ children, current, manager }: { children: Re
             aria-label="Abrir menu"
             aria-expanded={mobileMenuOpen}
             onClick={openMobileMenu}
-            onTouchStart={openMobileMenu}
           ><span /><span /><span /></button>
           <div className="mobileBrand"><strong>Central de Produção</strong><span>Comunicação</span></div>
           <div className="topbarContext"><span className="breadcrumb">Comunicação / Produção</span><strong>{manager ? 'Gestão de demandas' : 'Minha produção'}</strong></div>
@@ -115,11 +96,7 @@ export default function AppChrome({ children, current, manager }: { children: Re
             {manager && !isNewDemandPage && <Link className="primaryLink" href="/demandas/nova">＋ Nova demanda</Link>}
             {current ? (
               <div className="topbarUserActions">
-                {manager ? (
-                  <div className="userChip" title="Usuário administrador"><div className="avatar">{current.name.charAt(0).toUpperCase()}</div><div><strong>{current.name}</strong><span>{ROLE_LABELS[current.role] ?? current.role}</span></div></div>
-                ) : (
-                  <div className="userChip" title="Perfil do profissional"><div className="avatar">{current.name.charAt(0).toUpperCase()}</div><div><strong>{current.name}</strong><span>{ROLE_LABELS[current.role] ?? current.role}</span></div></div>
-                )}
+                <div className="userChip" title={manager ? 'Usuário administrador' : 'Perfil do profissional'}><div className="avatar">{current.name.charAt(0).toUpperCase()}</div><div><strong>{current.name}</strong><span>{ROLE_LABELS[current.role] ?? current.role}</span></div></div>
                 <Link prefetch={false} className="logoutLink" href="/sair">Sair</Link>
               </div>
             ) : (
