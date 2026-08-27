@@ -1,6 +1,6 @@
 'use client';
 
-import { FormEvent, useMemo, useState } from 'react';
+import { FormEvent, useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 
 type Department = { id: string; code: string; name: string };
@@ -44,13 +44,18 @@ export default function EditorialCalendar({ initialEvents, departments, manager 
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState('');
 
+  useEffect(() => {
+    setEvents(initialEvents);
+  }, [initialEvents]);
+
   const upcoming = useMemo(() => [...events].sort((a, b) => a.daysUntil - b.daysUntil), [events]);
 
   async function createEvent(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    const formElement = event.currentTarget;
     setSaving(true);
     setMessage('');
-    const form = new FormData(event.currentTarget);
+    const form = new FormData(formElement);
     const payload = Object.fromEntries(form.entries());
     payload.type = type;
     payload.annual = form.get('annual') === 'on' ? 'true' : 'false';
@@ -70,7 +75,7 @@ export default function EditorialCalendar({ initialEvents, departments, manager 
       setMessage(data.error || 'Não foi possível salvar.');
       return;
     }
-    event.currentTarget.reset();
+    formElement.reset();
     setType('COMMEMORATIVE');
     setMessage('Data adicionada ao calendário.');
     router.refresh();
