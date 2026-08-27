@@ -16,6 +16,7 @@ import './integrations.css';
 import './calendar.css';
 import './calendar-alerts.css';
 import './delivery.css';
+import './delivery-shortcut.css';
 import './attention.css';
 import AppChrome from '@/components/AppChrome';
 import IOSStandaloneDetector from '@/components/IOSStandaloneDetector';
