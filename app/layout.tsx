@@ -23,6 +23,7 @@ import './attention.css';
 import './departments.css';
 import AppChrome from '@/components/AppChrome';
 import IOSStandaloneDetector from '@/components/IOSStandaloneDetector';
+import ClientRecovery from '@/components/ClientRecovery';
 import CalendarFloatingShortcut from '@/components/CalendarFloatingShortcut';
 import { getCurrentUser, isManagerRole } from '@/lib/session';
 import { headers } from 'next/headers';
@@ -70,6 +71,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   return (
     <html lang="pt-BR">
       <body>
+        <ClientRecovery />
         <IOSStandaloneDetector />
         <AppChrome current={current} manager={manager}>
           {children}
