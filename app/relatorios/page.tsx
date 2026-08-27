@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { DemandStatus, UserRole } from '@prisma/client';
+import { DemandStatus, DemandType, UserRole } from '@prisma/client';
 import { redirect } from 'next/navigation';
 import { db } from '@/lib/db';
 import { getCurrentUser, isManagerRole } from '@/lib/session';
@@ -28,6 +28,24 @@ const STATUS_LABELS: Record<DemandStatus, string> = {
   APPROVED: 'Aprovada',
   DELIVERED: 'Entregue',
   ARCHIVED: 'Arquivada',
+};
+
+const TYPE_LABELS: Record<DemandType, string> = {
+  DESIGN: 'Artes',
+  VIDEO: 'Vídeos',
+  PHOTO: 'Fotos',
+  COPY: 'Textos',
+  SOCIAL: 'Social',
+  OTHER: 'Outros',
+};
+
+const TYPE_SHORT: Record<DemandType, string> = {
+  DESIGN: 'Arte',
+  VIDEO: 'Vídeo',
+  PHOTO: 'Foto',
+  COPY: 'Texto',
+  SOCIAL: 'Social',
+  OTHER: 'Outro',
 };
 
 function todayInBrazil() {
@@ -121,36 +139,49 @@ export default async function DailyReportPage({
   const selectedDate = normalizeDate(params.data);
   const { start, end } = dayRange(selectedDate);
 
-  const events = await db.demandHistory.findMany({
-    where: {
-      createdAt: { gte: start, lt: end },
-      actorId: { not: null },
-    },
-    include: {
-      actor: true,
-      demand: {
-        include: { department: true, assignee: true },
+  const [events, productionUsers, requestedDemands] = await Promise.all([
+    db.demandHistory.findMany({
+      where: {
+        createdAt: { gte: start, lt: end },
+        actorId: { not: null },
       },
-    },
-    orderBy: { createdAt: 'asc' },
-  });
-
-  const productionUsers = await db.user.findMany({
-    where: {
-      active: true,
-      role: {
-        in: [
-          UserRole.DESIGNER,
-          UserRole.EDITOR,
-          UserRole.COPYWRITER,
-          UserRole.SOCIAL_MEDIA,
-          UserRole.MANAGER,
-          UserRole.ADMIN,
-        ],
+      include: {
+        actor: true,
+        demand: {
+          include: { department: true, assignee: true },
+        },
       },
-    },
-    orderBy: { name: 'asc' },
-  });
+      orderBy: { createdAt: 'asc' },
+    }),
+    db.user.findMany({
+      where: {
+        active: true,
+        role: {
+          in: [
+            UserRole.DESIGNER,
+            UserRole.EDITOR,
+            UserRole.COPYWRITER,
+            UserRole.SOCIAL_MEDIA,
+            UserRole.MANAGER,
+            UserRole.ADMIN,
+          ],
+        },
+      },
+      orderBy: { name: 'asc' },
+    }),
+    db.demand.findMany({
+      where: { createdAt: { gte: start, lt: end } },
+      select: {
+        id: true,
+        protocol: true,
+        title: true,
+        type: true,
+        status: true,
+        department: { select: { id: true, code: true, name: true } },
+      },
+      orderBy: { createdAt: 'asc' },
+    }),
+  ]);
 
   const totalWorked = uniqueDemandCount(events);
   const totalStarted = uniqueDemandCount(events, [DemandStatus.IN_PRODUCTION]);
@@ -173,6 +204,56 @@ export default async function DailyReportPage({
     })
     .filter(summary => summary.actions > 0)
     .sort((a, b) => b.worked - a.worked || b.actions - a.actions);
+
+  const departmentMap = new Map<string, {
+    id: string;
+    code: string;
+    name: string;
+    total: number;
+    types: Record<DemandType, number>;
+    delivered: number;
+    production: number;
+    approval: number;
+    changes: number;
+    demands: typeof requestedDemands;
+  }>();
+
+  for (const demand of requestedDemands) {
+    const key = demand.department?.id || 'SEM_SECRETARIA';
+    const currentDepartment = departmentMap.get(key) || {
+      id: key,
+      code: demand.department?.code || 'GERAL',
+      name: demand.department?.name || 'Sem secretaria informada',
+      total: 0,
+      types: {
+        DESIGN: 0,
+        VIDEO: 0,
+        PHOTO: 0,
+        COPY: 0,
+        SOCIAL: 0,
+        OTHER: 0,
+      } as Record<DemandType, number>,
+      delivered: 0,
+      production: 0,
+      approval: 0,
+      changes: 0,
+      demands: [],
+    };
+
+    currentDepartment.total += 1;
+    currentDepartment.types[demand.type] += 1;
+    currentDepartment.demands.push(demand);
+    if (demand.status === DemandStatus.DELIVERED) currentDepartment.delivered += 1;
+    if (demand.status === DemandStatus.IN_PRODUCTION) currentDepartment.production += 1;
+    if (demand.status === DemandStatus.WAITING_APPROVAL) currentDepartment.approval += 1;
+    if (demand.status === DemandStatus.CHANGES_REQUESTED) currentDepartment.changes += 1;
+    departmentMap.set(key, currentDepartment);
+  }
+
+  const departmentSummaries = [...departmentMap.values()]
+    .sort((a, b) => b.total - a.total || a.code.localeCompare(b.code));
+
+  const topDepartment = departmentSummaries[0] || null;
 
   return (
     <div className="page dailyReportPage">
@@ -199,6 +280,75 @@ export default async function DailyReportPage({
         <div className="reportStatCard purple"><span>↻</span><div><strong>{totalChanges}</strong><small>com alteração</small></div></div>
         <div className="reportStatCard teal"><span>✓</span><div><strong>{totalDelivered}</strong><small>entregues</small></div></div>
       </div>
+
+      <section className="reportPanel departmentReportPanel">
+        <div className="reportPanelHeader">
+          <div>
+            <span className="sectionKicker">POR SECRETARIA</span>
+            <h2>Quem mais demandou produção</h2>
+          </div>
+          <span>{requestedDemands.length} pedido(s) recebido(s) · {departmentSummaries.length} secretaria(s)</span>
+        </div>
+
+        {topDepartment && (
+          <div className="departmentReportHighlight">
+            <div className="departmentHighlightIcon">▦</div>
+            <div>
+              <span>Maior demanda do dia</span>
+              <strong>{topDepartment.code} — {topDepartment.name}</strong>
+              <small>{topDepartment.total} solicitação(ões)</small>
+            </div>
+          </div>
+        )}
+
+        {departmentSummaries.length === 0 ? (
+          <div className="reportEmpty">Nenhuma demanda nova foi registrada nesta data.</div>
+        ) : (
+          <div className="departmentReportGrid">
+            {departmentSummaries.map(summary => {
+              const typeEntries = (Object.entries(summary.types) as Array<[DemandType, number]>).filter(([, count]) => count > 0);
+              return (
+                <article className="departmentReportCard" key={summary.id}>
+                  <header>
+                    <div className="departmentCodeBadge">{summary.code}</div>
+                    <div>
+                      <strong>{summary.name}</strong>
+                      <span>{summary.total} demanda(s) solicitada(s)</span>
+                    </div>
+                    <b>{summary.total}</b>
+                  </header>
+
+                  <div className="departmentTypeChips">
+                    {typeEntries.map(([type, count]) => (
+                      <span key={type}><b>{count}</b> {TYPE_LABELS[type]}</span>
+                    ))}
+                  </div>
+
+                  <div className="departmentStatusRow">
+                    <span><b>{summary.production}</b> em produção</span>
+                    <span><b>{summary.approval}</b> aprovação</span>
+                    <span><b>{summary.changes}</b> alteração</span>
+                    <span className="done"><b>{summary.delivered}</b> entregues</span>
+                  </div>
+
+                  <details className="departmentDemandDetails">
+                    <summary>Ver pedidos da secretaria</summary>
+                    <div>
+                      {summary.demands.map(demand => (
+                        <Link href={`/demandas/${demand.id}`} key={demand.id}>
+                          <span>{demand.protocol}</span>
+                          <strong>{demand.title}</strong>
+                          <small>{TYPE_SHORT[demand.type]} · {STATUS_LABELS[demand.status]}</small>
+                        </Link>
+                      ))}
+                    </div>
+                  </details>
+                </article>
+              );
+            })}
+          </div>
+        )}
+      </section>
 
       <section className="reportPanel">
         <div className="reportPanelHeader">
