@@ -2,12 +2,15 @@ import CalendarAlerts from '@/components/CalendarAlerts';
 import KanbanBoard from '@/components/KanbanBoard';
 import ManagerAttention from '@/components/ManagerAttention';
 import { db } from '@/lib/db';
+import { syncEditorialCalendarBase } from '@/lib/calendar-base';
 import { calendarDaysUntil, nextOccurrence } from '@/lib/editorial-calendar';
 import { getCurrentUser, isManagerRole } from '@/lib/session';
 
 export const dynamic = 'force-dynamic';
 
 export default async function HomePage() {
+  await syncEditorialCalendarBase();
+
   const [demands, calendarEvents, current] = await Promise.all([
     db.demand.findMany({
       select: {
