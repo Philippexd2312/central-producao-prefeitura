@@ -5,13 +5,17 @@ import { db } from '@/lib/db';
 import { syncEditorialCalendarBase } from '@/lib/calendar-base';
 import { calendarDaysUntil, nextOccurrence } from '@/lib/editorial-calendar';
 import { getCurrentUser, isManagerRole } from '@/lib/session';
+import { redirect } from 'next/navigation';
 
 export const dynamic = 'force-dynamic';
 
 export default async function HomePage() {
+  const current = await getCurrentUser();
+  if (current && !isManagerRole(current.role)) redirect('/meu-painel');
+
   await syncEditorialCalendarBase();
 
-  const [demands, calendarEvents, current] = await Promise.all([
+  const [demands, calendarEvents] = await Promise.all([
     db.demand.findMany({
       select: {
         id: true,
@@ -43,7 +47,6 @@ export default async function HomePage() {
       include: { department: { select: { code: true, name: true } } },
       orderBy: { eventDate: 'asc' },
     }),
-    getCurrentUser(),
   ]);
 
   const today = new Date();
@@ -60,7 +63,6 @@ export default async function HomePage() {
   };
 
   const totalOpen = demands.filter(d => !['DELIVERED', 'ARCHIVED'].includes(d.status)).length;
-  const manager = Boolean(current && isManagerRole(current.role));
   const changesCount = demands.filter(d => d.status === 'CHANGES_REQUESTED').length;
 
   const attentionItems = demands
@@ -127,14 +129,12 @@ export default async function HomePage() {
         <div className="stat statLate"><div className="statIcon">!</div><div><strong>{stats.late}</strong><span>Atrasadas</span></div></div>
       </section>
 
-      {manager && (
-        <ManagerAttention
-          items={attentionItems}
-          approvalCount={stats.approval}
-          lateCount={stats.late}
-          changesCount={changesCount}
-        />
-      )}
+      <ManagerAttention
+        items={attentionItems}
+        approvalCount={stats.approval}
+        lateCount={stats.late}
+        changesCount={changesCount}
+      />
 
       <CalendarAlerts alerts={calendarAlerts} />
 
