@@ -12,6 +12,7 @@ import './mobile-polish.css';
 import './new-demand.css';
 import './kanban-drag.css';
 import './designer-dashboard.css';
+import './designer-nav.css';
 import './integrations.css';
 import './calendar.css';
 import './calendar-birthday.css';
