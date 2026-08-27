@@ -14,6 +14,7 @@ import './kanban-drag.css';
 import './designer-dashboard.css';
 import './integrations.css';
 import './calendar.css';
+import './calendar-birthday.css';
 import './calendar-alerts.css';
 import './delivery.css';
 import './delivery-shortcut.css';
