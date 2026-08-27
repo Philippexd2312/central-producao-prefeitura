@@ -1,12 +1,14 @@
 import CalendarAlerts from '@/components/CalendarAlerts';
 import KanbanBoard from '@/components/KanbanBoard';
+import ManagerAttention from '@/components/ManagerAttention';
 import { db } from '@/lib/db';
 import { calendarDaysUntil, nextOccurrence } from '@/lib/editorial-calendar';
+import { getCurrentUser, isManagerRole } from '@/lib/session';
 
 export const dynamic = 'force-dynamic';
 
 export default async function HomePage() {
-  const [demands, calendarEvents] = await Promise.all([
+  const [demands, calendarEvents, current] = await Promise.all([
     db.demand.findMany({
       select: {
         id: true,
@@ -38,6 +40,7 @@ export default async function HomePage() {
       include: { department: { select: { code: true, name: true } } },
       orderBy: { eventDate: 'asc' },
     }),
+    getCurrentUser(),
   ]);
 
   const today = new Date();
@@ -49,11 +52,35 @@ export default async function HomePage() {
     new: demands.filter(d => d.status === 'NEW' || d.status === 'BRIEFING_READY').length,
     production: demands.filter(d => d.status === 'IN_PRODUCTION').length,
     approval: demands.filter(d => d.status === 'WAITING_APPROVAL').length,
-    late: demands.filter(d => d.dueAt && d.dueAt < new Date() && !['DELIVERED', 'ARCHIVED'].includes(d.status)).length,
+    late: demands.filter(d => d.dueAt && d.dueAt < today && !['DELIVERED', 'ARCHIVED'].includes(d.status)).length,
     today: demands.filter(d => d.dueAt && d.dueAt >= start && d.dueAt < end).length,
   };
 
   const totalOpen = demands.filter(d => !['DELIVERED', 'ARCHIVED'].includes(d.status)).length;
+  const manager = Boolean(current && isManagerRole(current.role));
+  const changesCount = demands.filter(d => d.status === 'CHANGES_REQUESTED').length;
+
+  const attentionItems = demands
+    .filter(demand => {
+      const overdue = Boolean(demand.dueAt && demand.dueAt < today && !['DELIVERED', 'ARCHIVED'].includes(demand.status));
+      return demand.status === 'WAITING_APPROVAL' || demand.status === 'CHANGES_REQUESTED' || overdue;
+    })
+    .sort((a, b) => {
+      const rank = (status: string) => status === 'WAITING_APPROVAL' ? 0 : status === 'CHANGES_REQUESTED' ? 1 : 2;
+      const statusDiff = rank(a.status) - rank(b.status);
+      if (statusDiff !== 0) return statusDiff;
+      return (a.dueAt?.getTime() ?? Number.MAX_SAFE_INTEGER) - (b.dueAt?.getTime() ?? Number.MAX_SAFE_INTEGER);
+    })
+    .slice(0, 6)
+    .map(demand => ({
+      id: demand.id,
+      protocol: demand.protocol,
+      title: demand.title,
+      status: demand.status,
+      dueAt: demand.dueAt?.toISOString() ?? null,
+      department: demand.department,
+      assignee: demand.assignee,
+    }));
 
   const calendarAlerts = calendarEvents
     .map(event => {
@@ -96,6 +123,15 @@ export default async function HomePage() {
         <div className="stat statToday"><div className="statIcon">◷</div><div><strong>{stats.today}</strong><span>Entregas hoje</span></div></div>
         <div className="stat statLate"><div className="statIcon">!</div><div><strong>{stats.late}</strong><span>Atrasadas</span></div></div>
       </section>
+
+      {manager && (
+        <ManagerAttention
+          items={attentionItems}
+          approvalCount={stats.approval}
+          lateCount={stats.late}
+          changesCount={changesCount}
+        />
+      )}
 
       <CalendarAlerts alerts={calendarAlerts} />
 
