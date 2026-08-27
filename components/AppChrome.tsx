@@ -38,6 +38,7 @@ export default function AppChrome({ children, current, manager }: { children: Re
       router.prefetch('/aprovacoes');
       router.prefetch('/relatorios');
       router.prefetch('/equipe/novo');
+      router.prefetch('/secretarias');
       router.prefetch('/configuracoes/whatsapp');
     } else {
       router.prefetch('/meu-painel');
@@ -79,7 +80,11 @@ export default function AppChrome({ children, current, manager }: { children: Re
 
           <div className="navSectionLabel navSectionGap">GESTÃO</div>
           {manager && <Link onClick={closeMobileMenu} className={`navItem${activeClass(pathname, '/equipe/novo')}`} href="/equipe/novo"><span className="navIcon">＋</span><span>Cadastrar profissional</span></Link>}
-          <div className="navItem navItemMuted"><span className="navIcon">⌂</span><span>Secretarias</span></div>
+          {manager ? (
+            <Link onClick={closeMobileMenu} className={`navItem${activeClass(pathname, '/secretarias')}`} href="/secretarias"><span className="navIcon">⌂</span><span>Secretarias</span></Link>
+          ) : (
+            <div className="navItem navItemMuted"><span className="navIcon">⌂</span><span>Secretarias</span></div>
+          )}
 
           {manager ? (
             <>
