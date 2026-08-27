@@ -20,6 +20,7 @@ import './delivery-shortcut.css';
 import './attention.css';
 import AppChrome from '@/components/AppChrome';
 import IOSStandaloneDetector from '@/components/IOSStandaloneDetector';
+import CalendarFloatingShortcut from '@/components/CalendarFloatingShortcut';
 import { getCurrentUser, isManagerRole } from '@/lib/session';
 import { headers } from 'next/headers';
 import { redirect } from 'next/navigation';
@@ -61,14 +62,16 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   if (!user && !publicRoute) redirect(`/login?next=${encodeURIComponent(pathname)}`);
 
   const current = user ? { id: user.id, name: user.name, email: user.email, role: user.role } : null;
+  const manager = current ? isManagerRole(current.role) : false;
 
   return (
     <html lang="pt-BR">
       <body>
         <IOSStandaloneDetector />
-        <AppChrome current={current} manager={current ? isManagerRole(current.role) : false}>
+        <AppChrome current={current} manager={manager}>
           {children}
         </AppChrome>
+        {manager ? <CalendarFloatingShortcut /> : null}
       </body>
     </html>
   );
