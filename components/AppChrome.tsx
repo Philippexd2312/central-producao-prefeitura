@@ -64,7 +64,7 @@ export default function AppChrome({ children, current, manager }: { children: Re
     <div className={`appShell${isNewDemandPage ? ' newDemandRoute' : ''}${manager ? '' : ' designerShell'}`}>
       {mobileMenuOpen && <button type="button" className="mobileSidebarBackdrop" aria-label="Fechar menu" onClick={closeMobileMenu} onTouchStart={closeMobileMenu} />}
 
-      <aside className={`sidebar${mobileMenuOpen ? ' mobileOpen' : ''}`} aria-hidden={!mobileMenuOpen && typeof window !== 'undefined' && window.innerWidth <= 900}>
+      <aside className={`sidebar${mobileMenuOpen ? ' mobileOpen' : ''}`}>
         <div className="brandBlock">
           <div className="brandMark">C</div>
           <div><strong>COMUNICAÇÃO</strong><span>Central de Produção</span></div>
