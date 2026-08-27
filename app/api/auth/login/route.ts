@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { verifyPassword } from '@/lib/password';
-import { createSessionToken, SESSION_COOKIE } from '@/lib/session';
+import { createSessionToken, SESSION_COOKIE, isManagerRole } from '@/lib/session';
 
 function publicOrigin(request: Request) {
   const forwardedProto = request.headers.get('x-forwarded-proto')?.split(',')[0]?.trim();
@@ -21,7 +21,9 @@ function publicOrigin(request: Request) {
 }
 
 function redirectTo(request: Request, path: string) {
-  return NextResponse.redirect(new URL(path, publicOrigin(request)), 303);
+  const response = NextResponse.redirect(new URL(path, publicOrigin(request)), 303);
+  response.headers.set('Cache-Control', 'no-store, no-cache, must-revalidate');
+  return response;
 }
 
 export async function POST(request: Request) {
@@ -47,7 +49,8 @@ export async function POST(request: Request) {
 
   await db.user.update({ where: { id: user.id }, data: { lastLoginAt: new Date() } });
 
-  const response = redirectTo(request, '/');
+  const destination = isManagerRole(user.role) ? '/' : `/equipe/${user.id}`;
+  const response = redirectTo(request, destination);
   response.cookies.set(SESSION_COOKIE, token, {
     httpOnly: true,
     secure: process.env.NODE_ENV === 'production',
