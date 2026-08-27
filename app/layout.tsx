@@ -11,6 +11,8 @@ import './mobile-performance.css';
 import './mobile-polish.css';
 import './new-demand.css';
 import './kanban-drag.css';
+import './designer-dashboard.css';
+import './integrations.css';
 import AppChrome from '@/components/AppChrome';
 import IOSStandaloneDetector from '@/components/IOSStandaloneDetector';
 import { getCurrentUser, isManagerRole } from '@/lib/session';
@@ -51,19 +53,9 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   const publicRoute = pathname === '/login' || pathname.startsWith('/login/');
 
   const user = await getCurrentUser();
+  if (!user && !publicRoute) redirect(`/login?next=${encodeURIComponent(pathname)}`);
 
-  if (!user && !publicRoute) {
-    redirect(`/login?next=${encodeURIComponent(pathname)}`);
-  }
-
-  const current = user
-    ? {
-        id: user.id,
-        name: user.name,
-        email: user.email,
-        role: user.role,
-      }
-    : null;
+  const current = user ? { id: user.id, name: user.name, email: user.email, role: user.role } : null;
 
   return (
     <html lang="pt-BR">
