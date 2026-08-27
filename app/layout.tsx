@@ -19,6 +19,7 @@ import './calendar-alerts.css';
 import './delivery.css';
 import './delivery-shortcut.css';
 import './attention.css';
+import './departments.css';
 import AppChrome from '@/components/AppChrome';
 import IOSStandaloneDetector from '@/components/IOSStandaloneDetector';
 import CalendarFloatingShortcut from '@/components/CalendarFloatingShortcut';
