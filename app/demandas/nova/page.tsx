@@ -4,7 +4,7 @@ import { db } from '@/lib/db';
 export const dynamic = 'force-dynamic';
 
 export default async function NewDemandPage() {
-  const departments = await db.department.findMany({ orderBy: { code: 'asc' } });
+  const departments = await db.department.findMany({ where: { active: true }, orderBy: { code: 'asc' } });
 
   return (
     <div className="page formWrap">
