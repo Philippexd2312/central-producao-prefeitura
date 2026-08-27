@@ -15,6 +15,7 @@ import './designer-dashboard.css';
 import './integrations.css';
 import './calendar.css';
 import './calendar-alerts.css';
+import './delivery.css';
 import AppChrome from '@/components/AppChrome';
 import IOSStandaloneDetector from '@/components/IOSStandaloneDetector';
 import { getCurrentUser, isManagerRole } from '@/lib/session';
