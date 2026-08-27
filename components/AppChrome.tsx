@@ -25,7 +25,11 @@ export default function AppChrome({ children, current, manager }: { children: Re
   useEffect(() => { setMobileMenuOpen(false); }, [pathname]);
   useEffect(() => {
     document.body.style.overflow = mobileMenuOpen ? 'hidden' : '';
-    return () => { document.body.style.overflow = ''; };
+    document.documentElement.classList.toggle('mobileMenuIsOpen', mobileMenuOpen);
+    return () => {
+      document.body.style.overflow = '';
+      document.documentElement.classList.remove('mobileMenuIsOpen');
+    };
   }, [mobileMenuOpen]);
 
   useEffect(() => {
@@ -45,6 +49,10 @@ export default function AppChrome({ children, current, manager }: { children: Re
     }
   }, [current, manager, publicRoute, router]);
 
+  function openMobileMenu() {
+    setMobileMenuOpen(true);
+  }
+
   function closeMobileMenu() {
     setMobileMenuOpen(false);
     document.body.style.overflow = '';
@@ -54,13 +62,13 @@ export default function AppChrome({ children, current, manager }: { children: Re
 
   return (
     <div className={`appShell${isNewDemandPage ? ' newDemandRoute' : ''}${manager ? '' : ' designerShell'}`}>
-      {mobileMenuOpen && <button type="button" className="mobileSidebarBackdrop" aria-label="Fechar menu" onClick={closeMobileMenu} />}
+      {mobileMenuOpen && <button type="button" className="mobileSidebarBackdrop" aria-label="Fechar menu" onClick={closeMobileMenu} onTouchStart={closeMobileMenu} />}
 
-      <aside className={`sidebar${mobileMenuOpen ? ' mobileOpen' : ''}`}>
+      <aside className={`sidebar${mobileMenuOpen ? ' mobileOpen' : ''}`} aria-hidden={!mobileMenuOpen && typeof window !== 'undefined' && window.innerWidth <= 900}>
         <div className="brandBlock">
           <div className="brandMark">C</div>
           <div><strong>COMUNICAÇÃO</strong><span>Central de Produção</span></div>
-          <button type="button" className="mobileCloseButton" aria-label="Fechar menu" onClick={closeMobileMenu}>×</button>
+          <button type="button" className="mobileCloseButton" aria-label="Fechar menu" onClick={closeMobileMenu} onTouchStart={closeMobileMenu}>×</button>
         </div>
 
         <nav className="sideNav" aria-label="Navegação principal">
@@ -92,7 +100,14 @@ export default function AppChrome({ children, current, manager }: { children: Re
 
       <div className="workspace">
         <header className="workspaceTopbar">
-          <button type="button" className="mobileMenuButton" aria-label="Abrir menu" aria-expanded={mobileMenuOpen} onClick={() => setMobileMenuOpen(true)}><span /><span /><span /></button>
+          <button
+            type="button"
+            className="mobileMenuButton"
+            aria-label="Abrir menu"
+            aria-expanded={mobileMenuOpen}
+            onClick={openMobileMenu}
+            onTouchStart={openMobileMenu}
+          ><span /><span /><span /></button>
           <div className="mobileBrand"><strong>Central de Produção</strong><span>Comunicação</span></div>
           <div className="topbarContext"><span className="breadcrumb">Comunicação / Produção</span><strong>{manager ? 'Gestão de demandas' : 'Minha produção'}</strong></div>
           <div className="topbarActions">
