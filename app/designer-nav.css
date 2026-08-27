@@ -1,0 +1,20 @@
+@media(max-width:900px){
+  .mobileBottomNav.designerBottomNav{
+    grid-template-columns:1fr;
+    left:18px;
+    right:18px;
+    min-height:58px;
+  }
+  .mobileBottomNav.designerBottomNav a{
+    min-height:46px;
+    flex-direction:row;
+    gap:8px;
+    font-weight:900;
+  }
+  .mobileBottomNav.designerBottomNav a>small{
+    font-size:11px;
+  }
+  .designerShell .mainContent{
+    padding-bottom:calc(72px + env(safe-area-inset-bottom));
+  }
+}
