@@ -31,10 +31,10 @@ export default function AppChrome({ children, current, manager }: { children: Re
   useEffect(() => {
     if (publicRoute || !current) return;
     router.prefetch('/');
-    router.prefetch('/demandas/nova');
-    router.prefetch('/equipe');
-    router.prefetch('/calendario');
     if (manager) {
+      router.prefetch('/demandas/nova');
+      router.prefetch('/equipe');
+      router.prefetch('/calendario');
       router.prefetch('/aprovacoes');
       router.prefetch('/relatorios');
       router.prefetch('/equipe/novo');
@@ -64,35 +64,26 @@ export default function AppChrome({ children, current, manager }: { children: Re
         </div>
 
         <nav className="sideNav" aria-label="Navegação principal">
-          <div className="navSectionLabel">TRABALHO</div>
+          <div className="navSectionLabel">PRODUÇÃO</div>
           <Link onClick={closeMobileMenu} className={`navItem${activeClass(pathname, '/')}`} href="/"><span className="navIcon">▦</span><span>Painel de produção</span></Link>
 
-          {current && !manager && <Link onClick={closeMobileMenu} className={`navItem${activeClass(pathname, '/meu-painel')}`} href="/meu-painel"><span className="navIcon">◎</span><span>Meu painel</span></Link>}
-
-          <Link onClick={closeMobileMenu} className={`navItem${activeClass(pathname, '/demandas/nova')}`} href="/demandas/nova"><span className="navIcon">＋</span><span>Nova demanda</span></Link>
-          {manager ? (
-            <Link onClick={closeMobileMenu} className={`navItem${activeClass(pathname, '/aprovacoes')}`} href="/aprovacoes"><span className="navIcon">◫</span><span>Aprovações</span></Link>
-          ) : (
-            <div className="navItem navItemMuted"><span className="navIcon">◫</span><span>Aprovações</span></div>
-          )}
-          <Link onClick={closeMobileMenu} className={`navItem${activeClass(pathname, '/equipe')}`} href="/equipe"><span className="navIcon">◉</span><span>Equipe</span></Link>
-          <Link onClick={closeMobileMenu} className={`navItem${activeClass(pathname, '/calendario')}`} href="/calendario"><span className="navIcon">◷</span><span>Calendário</span></Link>
-
-          <div className="navSectionLabel navSectionGap">GESTÃO</div>
-          {manager && <Link onClick={closeMobileMenu} className={`navItem${activeClass(pathname, '/equipe/novo')}`} href="/equipe/novo"><span className="navIcon">＋</span><span>Cadastrar profissional</span></Link>}
-          {manager ? (
-            <Link onClick={closeMobileMenu} className={`navItem${activeClass(pathname, '/secretarias')}`} href="/secretarias"><span className="navIcon">⌂</span><span>Secretarias</span></Link>
-          ) : (
-            <div className="navItem navItemMuted"><span className="navIcon">⌂</span><span>Secretarias</span></div>
+          {current && !manager && (
+            <Link onClick={closeMobileMenu} className={`navItem${activeClass(pathname, '/meu-painel')}`} href="/meu-painel"><span className="navIcon">◎</span><span>Meu painel</span></Link>
           )}
 
-          {manager ? (
+          {manager && (
             <>
+              <Link onClick={closeMobileMenu} className={`navItem${activeClass(pathname, '/demandas/nova')}`} href="/demandas/nova"><span className="navIcon">＋</span><span>Nova demanda</span></Link>
+              <Link onClick={closeMobileMenu} className={`navItem${activeClass(pathname, '/aprovacoes')}`} href="/aprovacoes"><span className="navIcon">◫</span><span>Aprovações</span></Link>
+              <Link onClick={closeMobileMenu} className={`navItem${activeClass(pathname, '/equipe')}`} href="/equipe"><span className="navIcon">◉</span><span>Equipe</span></Link>
+              <Link onClick={closeMobileMenu} className={`navItem${activeClass(pathname, '/calendario')}`} href="/calendario"><span className="navIcon">◷</span><span>Calendário</span></Link>
+
+              <div className="navSectionLabel navSectionGap">GESTÃO</div>
+              <Link onClick={closeMobileMenu} className={`navItem${activeClass(pathname, '/equipe/novo')}`} href="/equipe/novo"><span className="navIcon">＋</span><span>Cadastrar profissional</span></Link>
+              <Link onClick={closeMobileMenu} className={`navItem${activeClass(pathname, '/secretarias')}`} href="/secretarias"><span className="navIcon">⌂</span><span>Secretarias</span></Link>
               <Link onClick={closeMobileMenu} className={`navItem${activeClass(pathname, '/relatorios')}`} href="/relatorios"><span className="navIcon">▤</span><span>Relatórios</span></Link>
               <Link onClick={closeMobileMenu} className={`navItem${activeClass(pathname, '/configuracoes/whatsapp')}`} href="/configuracoes/whatsapp"><span className="navIcon">⚡</span><span>WhatsApp & IA</span></Link>
             </>
-          ) : (
-            <div className="navItem navItemMuted"><span className="navIcon">▤</span><span>Relatórios</span></div>
           )}
         </nav>
 
@@ -103,10 +94,10 @@ export default function AppChrome({ children, current, manager }: { children: Re
         <header className="workspaceTopbar">
           <button type="button" className="mobileMenuButton" aria-label="Abrir menu" aria-expanded={mobileMenuOpen} onClick={() => setMobileMenuOpen(true)}><span /><span /><span /></button>
           <div className="mobileBrand"><strong>Central de Produção</strong><span>Comunicação</span></div>
-          <div className="topbarContext"><span className="breadcrumb">Comunicação / Produção</span><strong>Gestão de demandas</strong></div>
+          <div className="topbarContext"><span className="breadcrumb">Comunicação / Produção</span><strong>{manager ? 'Gestão de demandas' : 'Minha produção'}</strong></div>
           <div className="topbarActions">
             <div className="notificationBtn" title="Notificações">●</div>
-            {!isNewDemandPage && <Link className="primaryLink" href="/demandas/nova">＋ Nova demanda</Link>}
+            {manager && !isNewDemandPage && <Link className="primaryLink" href="/demandas/nova">＋ Nova demanda</Link>}
             {current ? (
               <div className="topbarUserActions">
                 {manager ? (
@@ -125,15 +116,17 @@ export default function AppChrome({ children, current, manager }: { children: Re
         <main className="mainContent">{children}</main>
       </div>
 
-      <nav className="mobileBottomNav" aria-label="Atalhos móveis">
+      <nav className={`mobileBottomNav${manager ? '' : ' designerBottomNav'}`} aria-label="Atalhos móveis">
         <Link href="/" className={pathname === '/' ? 'active' : ''}><span>▦</span><small>Painel</small></Link>
         {!manager && current ? (
           <Link href="/meu-painel" className={pathname.startsWith('/meu-painel') ? 'active' : ''}><span>◎</span><small>Meu painel</small></Link>
         ) : (
-          <Link href="/aprovacoes" className={pathname.startsWith('/aprovacoes') ? 'active' : ''}><span>◫</span><small>Aprovar</small></Link>
+          <>
+            <Link href="/aprovacoes" className={pathname.startsWith('/aprovacoes') ? 'active' : ''}><span>◫</span><small>Aprovar</small></Link>
+            <Link href="/demandas/nova" className={`mobileBottomPrimary ${pathname.startsWith('/demandas/nova') ? 'active' : ''}`}><span>＋</span><small>Nova</small></Link>
+            <Link href="/calendario" className={pathname.startsWith('/calendario') ? 'active' : ''}><span>◷</span><small>Agenda</small></Link>
+          </>
         )}
-        <Link href="/demandas/nova" className={`mobileBottomPrimary ${pathname.startsWith('/demandas/nova') ? 'active' : ''}`}><span>＋</span><small>Nova</small></Link>
-        <Link href="/calendario" className={pathname.startsWith('/calendario') ? 'active' : ''}><span>◷</span><small>Agenda</small></Link>
       </nav>
     </div>
   );
