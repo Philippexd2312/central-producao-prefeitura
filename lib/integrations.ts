@@ -40,6 +40,18 @@ export async function getWhatsAppSettings() {
   };
 }
 
+export async function getGeminiSettings() {
+  const saved = await db.integrationConfig.findUnique({ where: { provider: 'GEMINI' } }).catch(() => null);
+  const apiKey = saved?.secretEncrypted ? decryptSecret(saved.secretEncrypted) : (process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY || '');
+  return {
+    enabled: saved?.enabled ?? Boolean(apiKey),
+    apiKey,
+    model: saved?.model || process.env.GEMINI_MODEL || 'gemini-3.7-flash',
+    transcribeModel: saved?.transcribeModel || process.env.GEMINI_TRANSCRIBE_MODEL || saved?.model || process.env.GEMINI_MODEL || 'gemini-3.7-flash',
+    source: saved ? 'panel' : 'environment',
+  };
+}
+
 export async function getOpenAISettings() {
   const saved = await db.integrationConfig.findUnique({ where: { provider: 'OPENAI' } }).catch(() => null);
   const apiKey = saved?.secretEncrypted ? decryptSecret(saved.secretEncrypted) : (process.env.OPENAI_API_KEY || '');
