@@ -85,6 +85,7 @@ model User {
   lastLoginAt       DateTime?
   assignedDemands   Demand[]         @relation("DemandAssignee")
   demandMemberships DemandMember[]
+  submittedVersions DemandVersion[]
   comments          DemandComment[]
   histories         DemandHistory[]
   createdAt         DateTime         @default(now())
@@ -104,6 +105,9 @@ model Demand {
   priority        DemandPriority  @default(NORMAL)
   startAt         DateTime?
   dueAt           DateTime?
+  approvedAt      DateTime?
+  deliveredAt     DateTime?
+  deliveryNote    String?
   coverUrl        String?
   requesterName   String?
   requesterPhone  String?
@@ -115,6 +119,7 @@ model Demand {
   members         DemandMember[]
   labels          DemandLabel[]
   checklistItems  DemandChecklistItem[]
+  versions        DemandVersion[]
   assets          DemandAsset[]
   comments        DemandComment[]
   history         DemandHistory[]
@@ -163,6 +168,25 @@ model DemandChecklistItem {
   @@index([demandId])
 }
 
+model DemandVersion {
+  id            String   @id @default(cuid())
+  demandId      String
+  demand        Demand   @relation(fields: [demandId], references: [id], onDelete: Cascade)
+  number        Int
+  name          String
+  url           String
+  mimeType      String?
+  note          String?
+  final         Boolean  @default(false)
+  submittedById String?
+  submittedBy   User?    @relation(fields: [submittedById], references: [id], onDelete: SetNull)
+  createdAt     DateTime @default(now())
+
+  @@unique([demandId, number])
+  @@index([demandId])
+  @@index([submittedById])
+}
+
 model DemandAsset {
   id        String    @id @default(cuid())
   demandId  String
@@ -209,17 +233,11 @@ model DemandMessage {
   createdAt   DateTime @default(now())
 }
 
-model IntegrationConfig {
-  id                  String   @id @default(cuid())
-  provider            String   @unique
-  enabled             Boolean  @default(false)
-  phoneNumberId       String?
-  businessAccountId   String?
-  graphVersion        String?
-  model                String?
-  transcribeModel      String?
-  secretEncrypted      String?
-  verifyEncrypted      String?
-  createdAt            DateTime @default(now())
-  updatedAt            DateTime @updatedAt
+model SystemSetting {
+  id        String   @id @default(cuid())
+  key       String   @unique
+  value     String
+  encrypted Boolean  @default(false)
+  updatedAt DateTime @updatedAt
+  createdAt DateTime @default(now())
 }
