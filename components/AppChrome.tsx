@@ -90,7 +90,7 @@ export default function AppChrome({ children, current, manager }: { children: Re
               <Link onClick={closeMobileMenu} className={`navItem${activeClass(pathname, '/equipe/novo')}`} href="/equipe/novo"><span className="navIcon">＋</span><span>Cadastrar profissional</span></Link>
               <Link onClick={closeMobileMenu} className={`navItem${activeClass(pathname, '/secretarias')}`} href="/secretarias"><span className="navIcon">⌂</span><span>Secretarias</span></Link>
               <Link onClick={closeMobileMenu} className={`navItem${activeClass(pathname, '/relatorios')}`} href="/relatorios"><span className="navIcon">▤</span><span>Relatórios</span></Link>
-              <Link onClick={closeMobileMenu} className={`navItem${activeClass(pathname, '/configuracoes/whatsapp')}`} href="/configuracoes/whatsapp"><span className="navIcon">⚡</span><span>WhatsApp & IA</span></Link>
+              <Link onClick={closeMobileMenu} className={`navItem${activeClass(pathname, '/configuracoes/whatsapp')}`} href="/configuracoes/whatsapp"><span className="navIcon">✦</span><span>WhatsApp & Gemini</span></Link>
             </>
           )}
         </nav>
