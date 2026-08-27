@@ -65,13 +65,22 @@ enum UserAvailability {
   AWAY
 }
 
+enum CalendarEventType {
+  COMMEMORATIVE
+  BIRTHDAY
+  INSTITUTIONAL
+  CAMPAIGN
+  OTHER
+}
+
 model Department {
-  id        String   @id @default(cuid())
-  name      String   @unique
-  code      String   @unique
-  demands   Demand[]
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id             String          @id @default(cuid())
+  name           String          @unique
+  code           String          @unique
+  demands        Demand[]
+  calendarEvents CalendarEvent[]
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
 }
 
 model User {
@@ -231,6 +240,27 @@ model DemandMessage {
   mediaId     String?
   rawJson     Json?
   createdAt   DateTime @default(now())
+}
+
+model CalendarEvent {
+  id           String            @id @default(cuid())
+  title        String
+  description  String?
+  type         CalendarEventType @default(COMMEMORATIVE)
+  eventDate    DateTime
+  annual       Boolean           @default(true)
+  leadDays     Int               @default(3)
+  active       Boolean           @default(true)
+  personName   String?
+  personRole   String?
+  departmentId String?
+  department   Department?       @relation(fields: [departmentId], references: [id], onDelete: SetNull)
+  createdAt    DateTime           @default(now())
+  updatedAt    DateTime           @updatedAt
+
+  @@index([eventDate])
+  @@index([type])
+  @@index([departmentId])
 }
 
 model SystemSetting {
