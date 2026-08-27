@@ -1,6 +1,7 @@
 import { AssetKind, DemandStatus } from '@prisma/client';
 import { db } from '@/lib/db';
 import { describeImage, readDocument, transcribeAudio, triageDemand } from '@/lib/agent';
+import { getWhatsAppSettings } from '@/lib/integrations';
 import { downloadMetaMedia, sendWhatsAppText } from '@/lib/meta';
 import { createProtocol } from '@/lib/protocol';
 import { NextRequest, NextResponse } from 'next/server';
@@ -9,7 +10,8 @@ export async function GET(request: NextRequest) {
   const mode = request.nextUrl.searchParams.get('hub.mode');
   const token = request.nextUrl.searchParams.get('hub.verify_token');
   const challenge = request.nextUrl.searchParams.get('hub.challenge');
-  if (mode === 'subscribe' && token === process.env.META_VERIFY_TOKEN) return new Response(challenge || '', { status: 200 });
+  const settings = await getWhatsAppSettings();
+  if (mode === 'subscribe' && settings.verifyToken && token === settings.verifyToken) return new Response(challenge || '', { status: 200 });
   return new Response('Forbidden', { status: 403 });
 }
 
@@ -52,9 +54,7 @@ async function processMedia(message: any) {
       const description = await describeImage(downloaded.bytes, downloaded.mimeType, message?.image?.caption || '');
       context = description ? `[Imagem analisada]\n${description}` : '[Imagem recebida — análise visual pendente]';
     } else if (message.type === 'document') {
-      const description = downloaded.mimeType.includes('pdf')
-        ? await readDocument(downloaded.bytes, downloaded.mimeType, filename)
-        : '';
+      const description = downloaded.mimeType.includes('pdf') ? await readDocument(downloaded.bytes, downloaded.mimeType, filename) : '';
       context = description ? `[Documento analisado: ${filename}]\n${description}` : `[Documento recebido: ${filename}]`;
     } else if (message.type === 'video') {
       context = `[Vídeo recebido${message?.video?.caption ? `: ${message.video.caption}` : ''}]`;
@@ -62,22 +62,10 @@ async function processMedia(message: any) {
       context = `[Mídia recebida: ${message.type}]`;
     }
 
-    return {
-      mediaId,
-      filename,
-      mimeType: downloaded.mimeType,
-      kind: assetKind(message.type),
-      context,
-    };
+    return { mediaId, filename, mimeType: downloaded.mimeType, kind: assetKind(message.type), context };
   } catch (error) {
     console.error('WHATSAPP_MEDIA_PROCESS_ERROR', mediaId, error);
-    return {
-      mediaId,
-      filename: `${message.type}-${mediaId}`,
-      mimeType: null,
-      kind: assetKind(message.type),
-      context: `[${message.type || 'Mídia'} recebida — processamento pendente]`,
-    };
+    return { mediaId, filename: `${message.type}-${mediaId}`, mimeType: null, kind: assetKind(message.type), context: `[${message.type || 'Mídia'} recebida — processamento pendente]` };
   }
 }
 
@@ -86,10 +74,7 @@ export async function POST(request: Request) {
   const changes = payload?.entry?.flatMap((entry: any) => entry.changes ?? []) ?? [];
   const events = changes.flatMap((change: any) => {
     const value = change?.value ?? {};
-    return (value.messages ?? []).map((message: any) => ({
-      message,
-      contacts: value.contacts ?? [],
-    }));
+    return (value.messages ?? []).map((message: any) => ({ message, contacts: value.contacts ?? [] }));
   });
 
   for (const event of events) {
@@ -104,17 +89,9 @@ export async function POST(request: Request) {
     const saved = await db.demandMessage.upsert({
       where: { externalId: message.id },
       update: {},
-      create: {
-        externalId: message.id,
-        fromPhone: message.from,
-        type: message.type || 'unknown',
-        text: text || null,
-        mediaId,
-        rawJson: message,
-      },
+      create: { externalId: message.id, fromPhone: message.from, type: message.type || 'unknown', text: text || null, mediaId, rawJson: message },
     });
 
-    // Meta pode repetir webhooks. Se esta mensagem já foi ligada a uma demanda, não processa novamente.
     if (saved.demandId) continue;
 
     const media = mediaId ? await processMedia(message) : null;
@@ -137,9 +114,7 @@ export async function POST(request: Request) {
 
     const combinedText = [existing?.originalText, ...newParts].filter(Boolean).join('\n\n');
     const triage = await triageDemand({ text: combinedText, mediaTypes: media ? [message.type] : [] });
-    const department = triage.departmentCode
-      ? await db.department.findUnique({ where: { code: triage.departmentCode } })
-      : null;
+    const department = triage.departmentCode ? await db.department.findUnique({ where: { code: triage.departmentCode } }) : null;
     const dueAt = safeDate(triage.dueAtIso);
 
     let demand;
@@ -161,12 +136,7 @@ export async function POST(request: Request) {
           departmentId: department?.id ?? existing.departmentId,
           dueAt: dueAt ?? existing.dueAt,
           messages: { connect: { id: saved.id } },
-          history: {
-            create: {
-              action: media ? 'WHATSAPP_MEDIA_ADDED' : 'WHATSAPP_MESSAGE_ADDED',
-              toValue: message.id,
-            },
-          },
+          history: { create: { action: media ? 'WHATSAPP_MEDIA_ADDED' : 'WHATSAPP_MESSAGE_ADDED', toValue: message.id } },
         },
       });
     } else {
@@ -188,12 +158,7 @@ export async function POST(request: Request) {
           departmentId: department?.id,
           dueAt,
           messages: { connect: { id: saved.id } },
-          history: {
-            create: [
-              { action: 'WHATSAPP_RECEIVED', toValue: message.id },
-              { action: 'AI_BRIEFING_READY', toValue: 'WAITING_ASSIGNEE' },
-            ],
-          },
+          history: { create: [{ action: 'WHATSAPP_RECEIVED', toValue: message.id }, { action: 'AI_BRIEFING_READY', toValue: 'WAITING_ASSIGNEE' }] },
         },
       });
     }
@@ -202,36 +167,14 @@ export async function POST(request: Request) {
 
     if (media) {
       const mediaUrl = `/api/media/${media.mediaId}`;
-      const alreadyAttached = await db.demandAsset.findFirst({
-        where: { demandId: demand.id, url: mediaUrl },
-      });
-      if (!alreadyAttached) {
-        await db.demandAsset.create({
-          data: {
-            demandId: demand.id,
-            name: media.filename,
-            url: mediaUrl,
-            mimeType: media.mimeType,
-            kind: media.kind,
-          },
-        });
-      }
+      const alreadyAttached = await db.demandAsset.findFirst({ where: { demandId: demand.id, url: mediaUrl } });
+      if (!alreadyAttached) await db.demandAsset.create({ data: { demandId: demand.id, name: media.filename, url: mediaUrl, mimeType: media.mimeType, kind: media.kind } });
     }
 
     if (created) {
-      const lines = [
-        '✅ Demanda recebida e organizada pela IA.',
-        `Protocolo: ${demand.protocol}`,
-        `Tipo: ${triage.type}`,
-        `Prioridade: ${triage.priority}`,
-        'Já entrou na fila de produção da Comunicação.',
-      ];
+      const lines = ['✅ Demanda recebida e organizada pela IA.', `Protocolo: ${demand.protocol}`, `Tipo: ${triage.type}`, `Prioridade: ${triage.priority}`, 'Já entrou na fila de produção da Comunicação.'];
       if (triage.missingInfo) lines.push(`⚠️ ${triage.missingInfo}`);
-      try {
-        await sendWhatsAppText(message.from, lines.join('\n'));
-      } catch (error) {
-        console.error('WHATSAPP_ACK_ERROR', error);
-      }
+      try { await sendWhatsAppText(message.from, lines.join('\n')); } catch (error) { console.error('WHATSAPP_ACK_ERROR', error); }
     }
   }
 
