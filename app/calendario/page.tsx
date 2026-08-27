@@ -19,7 +19,7 @@ export default async function CalendarPage() {
       include: { department: { select: { id: true, code: true, name: true } } },
       orderBy: { title: 'asc' },
     }),
-    db.department.findMany({ select: { id: true, code: true, name: true }, orderBy: { name: 'asc' } }),
+    db.department.findMany({ where: { active: true }, select: { id: true, code: true, name: true }, orderBy: { name: 'asc' } }),
   ]);
 
   const normalized = events
