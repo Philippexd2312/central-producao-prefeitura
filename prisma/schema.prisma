@@ -263,6 +263,21 @@ model CalendarEvent {
   @@index([departmentId])
 }
 
+model IntegrationConfig {
+  id                  String   @id @default(cuid())
+  provider            String   @unique
+  enabled             Boolean  @default(false)
+  phoneNumberId       String?
+  businessAccountId   String?
+  graphVersion        String?
+  model               String?
+  transcribeModel     String?
+  secretEncrypted     String?
+  verifyEncrypted     String?
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+}
+
 model SystemSetting {
   id        String   @id @default(cuid())
   key       String   @unique
