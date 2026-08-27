@@ -1,3 +1,4 @@
+import Link from 'next/link';
 import DemandWorkspace from '@/components/DemandWorkspace';
 import { db } from '@/lib/db';
 import { STATUS_LABELS } from '@/types/demand';
@@ -36,10 +37,20 @@ export default async function DemandPage({ params }: { params: Promise<{ id: str
 
   if (!demand) notFound();
 
+  const manager = currentUser ? isManagerRole(currentUser.role) : false;
+  const member = currentUser ? demand.members.some(item => item.user.id === currentUser.id) : false;
+  const canUseDelivery = Boolean(currentUser && (manager || demand.assigneeId === currentUser.id || member));
+
   return (
     <div className="page detailPageWide">
+      {canUseDelivery && (
+        <div className="deliveryEntryBar">
+          <div><span>Produção & Entrega</span><small>Versões, aprovação e arquivo final</small></div>
+          <Link href={`/demandas/${demand.id}/entrega`}>Abrir fluxo →</Link>
+        </div>
+      )}
       <DemandWorkspace
-        manager={currentUser ? isManagerRole(currentUser.role) : false}
+        manager={manager}
         team={team}
         demand={{
           id: demand.id,
