@@ -97,6 +97,57 @@
     scroll-margin-top: 132px !important;
     scroll-margin-bottom: 48vh !important;
   }
+
+  /* Menu mobile: camada de toque dedicada para Safari instalado como app. */
+  .workspaceTopbar {
+    isolation: isolate;
+  }
+
+  .mobileMenuButton {
+    position: relative !important;
+    z-index: 220 !important;
+    pointer-events: auto !important;
+    touch-action: manipulation !important;
+    -webkit-user-select: none !important;
+    user-select: none !important;
+    -webkit-touch-callout: none !important;
+  }
+
+  .mobileMenuButton::before {
+    content: '';
+    position: absolute;
+    inset: -8px;
+  }
+
+  .mobileSidebarBackdrop {
+    z-index: 980 !important;
+    pointer-events: auto !important;
+    touch-action: none !important;
+  }
+
+  .sidebar {
+    z-index: 1000 !important;
+    pointer-events: auto !important;
+  }
+
+  .sidebar.mobileOpen {
+    transform: translate3d(0,0,0) !important;
+    visibility: visible !important;
+  }
+
+  html.mobileMenuIsOpen .workspaceTopbar,
+  html.mobileMenuIsOpen .mainContent,
+  html.mobileMenuIsOpen .mobileBottomNav {
+    pointer-events: none;
+  }
+
+  html.mobileMenuIsOpen .sidebar,
+  html.mobileMenuIsOpen .mobileSidebarBackdrop,
+  html.mobileMenuIsOpen .mobileCloseButton,
+  html.mobileMenuIsOpen .sidebar a,
+  html.mobileMenuIsOpen .sidebar button {
+    pointer-events: auto !important;
+  }
 }
 
 /* fallback para iPhone mesmo fora do modo standalone */
