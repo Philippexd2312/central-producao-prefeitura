@@ -1,6 +1,7 @@
 import { redirect } from 'next/navigation';
 import EditorialCalendar from '@/components/EditorialCalendar';
 import { db } from '@/lib/db';
+import { syncEditorialCalendarBase } from '@/lib/calendar-base';
 import { calendarDaysUntil, nextOccurrence } from '@/lib/editorial-calendar';
 import { getCurrentUser, isManagerRole } from '@/lib/session';
 
@@ -9,6 +10,8 @@ export const dynamic = 'force-dynamic';
 export default async function CalendarPage() {
   const current = await getCurrentUser();
   if (!current) redirect('/login');
+
+  await syncEditorialCalendarBase();
 
   const [events, departments] = await Promise.all([
     db.calendarEvent.findMany({
