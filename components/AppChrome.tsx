@@ -35,6 +35,7 @@ export default function AppChrome({ children, current, manager }: { children: Re
     router.prefetch('/equipe');
     router.prefetch('/calendario');
     if (manager) {
+      router.prefetch('/aprovacoes');
       router.prefetch('/relatorios');
       router.prefetch('/equipe/novo');
       router.prefetch('/configuracoes/whatsapp');
@@ -68,7 +69,11 @@ export default function AppChrome({ children, current, manager }: { children: Re
           {current && !manager && <Link onClick={closeMobileMenu} className={`navItem${activeClass(pathname, '/meu-painel')}`} href="/meu-painel"><span className="navIcon">◎</span><span>Meu painel</span></Link>}
 
           <Link onClick={closeMobileMenu} className={`navItem${activeClass(pathname, '/demandas/nova')}`} href="/demandas/nova"><span className="navIcon">＋</span><span>Nova demanda</span></Link>
-          <div className="navItem navItemMuted"><span className="navIcon">◫</span><span>Aprovações</span><small>em breve</small></div>
+          {manager ? (
+            <Link onClick={closeMobileMenu} className={`navItem${activeClass(pathname, '/aprovacoes')}`} href="/aprovacoes"><span className="navIcon">◫</span><span>Aprovações</span></Link>
+          ) : (
+            <div className="navItem navItemMuted"><span className="navIcon">◫</span><span>Aprovações</span></div>
+          )}
           <Link onClick={closeMobileMenu} className={`navItem${activeClass(pathname, '/equipe')}`} href="/equipe"><span className="navIcon">◉</span><span>Equipe</span></Link>
           <Link onClick={closeMobileMenu} className={`navItem${activeClass(pathname, '/calendario')}`} href="/calendario"><span className="navIcon">◷</span><span>Calendário</span></Link>
 
@@ -120,14 +125,10 @@ export default function AppChrome({ children, current, manager }: { children: Re
         {!manager && current ? (
           <Link href="/meu-painel" className={pathname.startsWith('/meu-painel') ? 'active' : ''}><span>◎</span><small>Meu painel</small></Link>
         ) : (
-          <Link href="/equipe" className={pathname.startsWith('/equipe') && pathname !== '/equipe/novo' ? 'active' : ''}><span>◉</span><small>Equipe</small></Link>
+          <Link href="/aprovacoes" className={pathname.startsWith('/aprovacoes') ? 'active' : ''}><span>◫</span><small>Aprovar</small></Link>
         )}
         <Link href="/demandas/nova" className={`mobileBottomPrimary ${pathname.startsWith('/demandas/nova') ? 'active' : ''}`}><span>＋</span><small>Nova</small></Link>
-        {manager ? (
-          <Link href="/calendario" className={pathname.startsWith('/calendario') ? 'active' : ''}><span>◷</span><small>Agenda</small></Link>
-        ) : (
-          <Link href="/calendario" className={pathname.startsWith('/calendario') ? 'active' : ''}><span>◷</span><small>Agenda</small></Link>
-        )}
+        <Link href="/calendario" className={pathname.startsWith('/calendario') ? 'active' : ''}><span>◷</span><small>Agenda</small></Link>
       </nav>
     </div>
   );
