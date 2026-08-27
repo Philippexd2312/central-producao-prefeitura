@@ -30,8 +30,8 @@ export default function AppChrome({ children, current, manager }: { children: Re
 
   useEffect(() => {
     if (publicRoute || !current) return;
-    router.prefetch('/');
     if (manager) {
+      router.prefetch('/');
       router.prefetch('/demandas/nova');
       router.prefetch('/equipe');
       router.prefetch('/calendario');
@@ -53,7 +53,7 @@ export default function AppChrome({ children, current, manager }: { children: Re
   if (publicRoute) return <div className="publicRouteOnly">{children}</div>;
 
   return (
-    <div className={`appShell${isNewDemandPage ? ' newDemandRoute' : ''}`}>
+    <div className={`appShell${isNewDemandPage ? ' newDemandRoute' : ''}${manager ? '' : ' designerShell'}`}>
       {mobileMenuOpen && <button type="button" className="mobileSidebarBackdrop" aria-label="Fechar menu" onClick={closeMobileMenu} />}
 
       <aside className={`sidebar${mobileMenuOpen ? ' mobileOpen' : ''}`}>
@@ -65,14 +65,14 @@ export default function AppChrome({ children, current, manager }: { children: Re
 
         <nav className="sideNav" aria-label="Navegação principal">
           <div className="navSectionLabel">PRODUÇÃO</div>
-          <Link onClick={closeMobileMenu} className={`navItem${activeClass(pathname, '/')}`} href="/"><span className="navIcon">▦</span><span>Painel de produção</span></Link>
 
-          {current && !manager && (
-            <Link onClick={closeMobileMenu} className={`navItem${activeClass(pathname, '/meu-painel')}`} href="/meu-painel"><span className="navIcon">◎</span><span>Meu painel</span></Link>
+          {!manager && current && (
+            <Link onClick={closeMobileMenu} className={`navItem${activeClass(pathname, '/meu-painel')}`} href="/meu-painel"><span className="navIcon">◎</span><span>Minha produção</span></Link>
           )}
 
           {manager && (
             <>
+              <Link onClick={closeMobileMenu} className={`navItem${activeClass(pathname, '/')}`} href="/"><span className="navIcon">▦</span><span>Painel de produção</span></Link>
               <Link onClick={closeMobileMenu} className={`navItem${activeClass(pathname, '/demandas/nova')}`} href="/demandas/nova"><span className="navIcon">＋</span><span>Nova demanda</span></Link>
               <Link onClick={closeMobileMenu} className={`navItem${activeClass(pathname, '/aprovacoes')}`} href="/aprovacoes"><span className="navIcon">◫</span><span>Aprovações</span></Link>
               <Link onClick={closeMobileMenu} className={`navItem${activeClass(pathname, '/equipe')}`} href="/equipe"><span className="navIcon">◉</span><span>Equipe</span></Link>
@@ -96,14 +96,14 @@ export default function AppChrome({ children, current, manager }: { children: Re
           <div className="mobileBrand"><strong>Central de Produção</strong><span>Comunicação</span></div>
           <div className="topbarContext"><span className="breadcrumb">Comunicação / Produção</span><strong>{manager ? 'Gestão de demandas' : 'Minha produção'}</strong></div>
           <div className="topbarActions">
-            <div className="notificationBtn" title="Notificações">●</div>
+            {manager && <div className="notificationBtn" title="Notificações">●</div>}
             {manager && !isNewDemandPage && <Link className="primaryLink" href="/demandas/nova">＋ Nova demanda</Link>}
             {current ? (
               <div className="topbarUserActions">
                 {manager ? (
                   <div className="userChip" title="Usuário administrador"><div className="avatar">{current.name.charAt(0).toUpperCase()}</div><div><strong>{current.name}</strong><span>{ROLE_LABELS[current.role] ?? current.role}</span></div></div>
                 ) : (
-                  <Link className="userChip" href="/meu-painel" title="Abrir meu painel"><div className="avatar">{current.name.charAt(0).toUpperCase()}</div><div><strong>{current.name}</strong><span>{ROLE_LABELS[current.role] ?? current.role}</span></div></Link>
+                  <div className="userChip" title="Perfil do profissional"><div className="avatar">{current.name.charAt(0).toUpperCase()}</div><div><strong>{current.name}</strong><span>{ROLE_LABELS[current.role] ?? current.role}</span></div></div>
                 )}
                 <Link prefetch={false} className="logoutLink" href="/sair">Sair</Link>
               </div>
@@ -117,11 +117,11 @@ export default function AppChrome({ children, current, manager }: { children: Re
       </div>
 
       <nav className={`mobileBottomNav${manager ? '' : ' designerBottomNav'}`} aria-label="Atalhos móveis">
-        <Link href="/" className={pathname === '/' ? 'active' : ''}><span>▦</span><small>Painel</small></Link>
         {!manager && current ? (
-          <Link href="/meu-painel" className={pathname.startsWith('/meu-painel') ? 'active' : ''}><span>◎</span><small>Meu painel</small></Link>
+          <Link href="/meu-painel" className="active"><span>◎</span><small>Minha produção</small></Link>
         ) : (
           <>
+            <Link href="/" className={pathname === '/' ? 'active' : ''}><span>▦</span><small>Painel</small></Link>
             <Link href="/aprovacoes" className={pathname.startsWith('/aprovacoes') ? 'active' : ''}><span>◫</span><small>Aprovar</small></Link>
             <Link href="/demandas/nova" className={`mobileBottomPrimary ${pathname.startsWith('/demandas/nova') ? 'active' : ''}`}><span>＋</span><small>Nova</small></Link>
             <Link href="/calendario" className={pathname.startsWith('/calendario') ? 'active' : ''}><span>◷</span><small>Agenda</small></Link>
